@@ -8,7 +8,9 @@ Ce projet est un POC (proof of concept) de mon travail de diplôme. Il s'agit d'
 
 Les technologies utilisées seront Flutter pour l'application mobile, qui est le framework que je vais utiliser lors de mon travail de diplôme, et Typescript pour réaliser l'API.
 
-## Objectifs techniques
+## Objectifs
+
+### Techniques
 
 Les objectifs de ce POC sont les suivants :
 
@@ -22,7 +24,7 @@ Les objectifs de ce POC sont les suivants :
   - Gérer les erreurs de connexion (mauvais mot de passe, mauvais code 2FA...)
   - Gérer les erreurs de l'API (utilisateur non trouvé, erreur interne...)
 
-## Objectifs personnels
+### Personnels
 
 L'objectif principal de ce POC est de me familiariser avec les différentes technologies avant même que le travail ne commence. Cela me permettra de gagner du temps lors de sa réalisation, et m'assurera que je ne vais pas me bloquer à cause d'un problème technique, lié soit à mes connaissances personnelles ou à un mauvais choix technologique.
 
