@@ -2,7 +2,7 @@
 
 ## Description
 
-Ce projet est un POC (proof of concept) de mon travail de diplôme. Il s'agit d'une application mobile permettant de se connecter grâce à une API, avec les mécanismes de sécurité propres au web (JWT, CORS...).
+Ce projet est un POC (proof of concept) de mon travail de diplôme. Il s'agit d'une application mobile permettant de se connecter grâce à une API, avec les mécanismes de sécurité propres au web (JWT, CORS...). L'application ainsi que le serveur implémenteront un système d'authentification forte (2FA) avec TOTP (avec option de le connecter à un authentificateur via un QR code, ou une URL manuellement).
 
 ## Technologies utilisées
 
