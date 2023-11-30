@@ -1,20 +1,17 @@
 import * as Crypto from 'crypto'
-import * as OTPAuth from 'otpauth'
-const IV_LENGTH = 16 // For AES, this is always 16
-const SALT_LENGTH = 64 // In bytes
 
-// OTP
-const totp = OTPAuth.URI.parse(
-  'otpauth://totp/Missive:OTPAuth?issuer=Missive&secret=QFEPVWPD4OXBPKTZCOUPIZ4URDI223VN&algorithm=SHA256&digits=6&period=30'
-)
-console.log(totp.validate({ token: '519333' }))
+const SALT_LENGTH = 64 // In bytes
+const IV_LENGTH = 16 // For AES, this is always 16
 
 /**
  * Encrypts text using AES-256-CBC.
  * @param {string} textToEncrypt - Text to encrypt
  * @param {string} password - Password to use for encryption
  */
-function encrypt(textToEncrypt: string, password: string): Promise<string> {
+export function encrypt(
+  textToEncrypt: string,
+  password: string
+): Promise<{ text: string; salt: Buffer }> {
   const salt = Crypto.randomBytes(SALT_LENGTH)
 
   // Wrap in promise to use async/await (still using NodeJS' callback API)
@@ -31,7 +28,7 @@ function encrypt(textToEncrypt: string, password: string): Promise<string> {
       cipher.update(password)
       const encryptedText = cipher.final('base64')
 
-      resolve(encryptedText)
+      resolve({ text: encryptedText, salt })
     })
   })
 }
