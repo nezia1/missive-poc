@@ -10,4 +10,8 @@ console.log(totp.validate({ token: '519333' }))
 console.log('Hello via Bun!')
 
 const encryptedTOTP = await encrypt(totp.toString(), 'sample-password')
-decrypt(encryptedTOTP.text, 'sample-password')
+await decrypt('sample-password', {
+  text: encryptedTOTP.text,
+  salt: encryptedTOTP.salt,
+  iv: encryptedTOTP.iv,
+})
