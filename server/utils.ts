@@ -23,7 +23,7 @@ export function encrypt(
   // Wrap in promise to use async/await (still using NodeJS' callback API)
   return new Promise((resolve, reject) => {
     // Derive a 32 bits key from the password
-    Crypto.pbkdf2('sample-password', salt, ITERATIONS, 32, 'sha512', (err, derivedKey) => {
+    Crypto.pbkdf2(password, salt, ITERATIONS, 32, 'sha512', (err, derivedKey) => {
       if (err) reject(err)
 
       const iv = Crypto.randomBytes(IV_LENGTH)
