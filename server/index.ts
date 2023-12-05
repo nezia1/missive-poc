@@ -9,13 +9,14 @@ const totp = OTPAuth.URI.parse(
 console.time('encrypt')
 
 const encryptedTOTP = await encrypt(totp.toString(), 'sample-password')
-console.log(
-  await decrypt('sample-password', {
-    text: encryptedTOTP.text,
-    salt: encryptedTOTP.salt,
-    iv: encryptedTOTP.iv,
-    tag: encryptedTOTP.tag,
-  })
-)
+console.log('encrypted url: ' + encryptedTOTP.text)
+const decryptedTOTP = await decrypt('sample-password', {
+  text: encryptedTOTP.text,
+  salt: encryptedTOTP.salt,
+  iv: encryptedTOTP.iv,
+  tag: encryptedTOTP.tag,
+})
+
+console.log('decrypted url: ' + decryptedTOTP)
 
 console.timeEnd('encrypt')
