@@ -6,11 +6,11 @@ const ITERATIONS = 10000 // Recommendation is >= 10000
 
 /**
  * TODO: Separate key generation from ciphering
- * TODO: Also we should perhaps use a different algorithm for deriving the key from the password (use the password hash that we use for authentication?). Also 10000 iterations is too low according to the OWASP specification (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). Using the hash from the password will also be faster since it will already be generated.
+ * TODO: Also we should perhaps use a different algorithm for deriving the key from the password (use the password hash that we use for authentication?). Also 10000 iterations is too low according to the OWASP specification (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). However, since we are using ephemeral keys computed on the fly, this is probably not a big issue.
  **/
 
 /**
- * Encrypts text using AES-256-CBC.
+ * Encrypts text using AES-256-GDM.
  * @param {string} textToEncrypt - Text to encrypt
  * @param {string} password - Password to use for encryption
  */
@@ -47,7 +47,7 @@ export function encrypt(
 }
 
 /**
- * Decrypts text using AES-256-CBC, by providing the password, the symmetrical key salt and IV used for encryption.
+ * Decrypts text using AES-256-GDM, by providing the password, the symmetrical key salt and IV used for encryption.
  * @param password
  * @param encryptedData
  * @returns {Promise<string>} Decrypted text
