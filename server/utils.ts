@@ -1,11 +1,12 @@
 import * as Crypto from 'crypto'
 
 const SALT_LENGTH = 64 // In bytes
-const IV_LENGTH = 16 // For AES, this is always 16
-const ITERATIONS = 100000 // Recommendation is >= 10000
+const IV_LENGTH = 12 // In bytes (for AES-256-gcm, this is 96 bits based on the GCM specification)
+const ITERATIONS = 10000 // Recommendation is >= 10000
 
 /**
- * TODO: make this clearer (this is supposed to encrypt the TOTP URL, as well as additional sensitive information that might need to be stored in the database). Perhaps this should be split into two functions: one for deriving the key from the password, and another for encrypting the data
+ * TODO: Separate key generation from ciphering
+ * TODO: Also we should perhaps use a different algorithm for deriving the key from the password (use the password hash that we use for authentication?). Also 10000 iterations is too low according to the OWASP specification (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). Using the hash from the password will also be faster since it will already be generated.
  **/
 
 /**
@@ -16,7 +17,7 @@ const ITERATIONS = 100000 // Recommendation is >= 10000
 export function encrypt(
   textToEncrypt: string,
   password: string
-): Promise<{ text: string; salt: Buffer; iv: Buffer }> {
+): Promise<{ text: string; salt: Buffer; iv: Buffer; tag: Buffer }> {
   const salt = Crypto.randomBytes(SALT_LENGTH)
 
   // Wrap in promise to use async/await (still using NodeJS' callback API)
@@ -26,16 +27,21 @@ export function encrypt(
       if (err) reject(err)
 
       const iv = Crypto.randomBytes(IV_LENGTH)
-      const cipher = Crypto.createCipheriv('aes-256-cbc', derivedKey, iv)
+      const cipher = Crypto.createCipheriv('aes-256-gcm', derivedKey, iv)
 
       // Ciphering text
-      let encrypted = cipher.update(password)
-      const encryptedText = cipher.final('base64')
-      // TODO: finish implementing encryption
-      // encrypted =
+      let encrypted = cipher.update(textToEncrypt)
+      encrypted = Buffer.concat([encrypted, cipher.final()])
+
+      const tag = cipher.getAuthTag()
 
       // This is sent separately so it can be stored in the database, making it easier to decrypt later
-      resolve({ text: encryptedText, salt, iv })
+      resolve({
+        text: encrypted.toString('base64'),
+        salt,
+        iv,
+        tag,
+      })
     })
   })
 }
@@ -48,25 +54,24 @@ export function encrypt(
  */
 export function decrypt(
   password: string,
-  encryptedData: { text: string; salt: Buffer; iv: Buffer }
+  encryptedData: { text: string; salt: Buffer; iv: Buffer; tag: Buffer }
 ): Promise<string> {
-  const { text, salt, iv } = encryptedData
+  const { text, salt, iv, tag } = encryptedData
 
   const encryptedBuffer = Buffer.from(text, 'base64')
-
-  console.log('Buffer to decrypt: ', encryptedBuffer)
-  console.log('IV: ', iv)
 
   return new Promise((resolve, reject) => {
     Crypto.pbkdf2(password, salt, ITERATIONS, 32, 'sha512', (err, derivedKey) => {
       if (err) reject(err)
 
-      const decipher = Crypto.createDecipheriv('aes-256-cbc', derivedKey, iv)
-      decipher.update(encryptedBuffer)
+      const decipher = Crypto.createDecipheriv('aes-256-gcm', derivedKey, iv)
 
-      const decryptedText = decipher.final('base64')
+      decipher.setAuthTag(tag)
 
-      resolve(decryptedText)
+      let decrypted = decipher.update(encryptedBuffer)
+      decrypted = Buffer.concat([decrypted, decipher.final()])
+
+      resolve(decrypted.toString('utf8'))
     })
   })
 }
