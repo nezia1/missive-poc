@@ -6,12 +6,14 @@ import { encrypt, decrypt } from '@/utils'
 import { parseGenericError } from '@/utils'
 
 import users from '@/routes/users'
+import tokens from '@/routes/tokens'
 
 const prisma = new PrismaClient()
 
 const fastify = Fastify({ logger: true })
 
 fastify.register(users, { prefix: '/users' })
+fastify.register(tokens, { prefix: '/tokens' })
 
 try {
   await fastify.listen({ port: 8080 })
