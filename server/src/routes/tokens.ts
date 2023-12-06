@@ -2,18 +2,19 @@ import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
-import * as jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 
 import { UserRequestBody } from '@/global'
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
 
-const { JWT_SECRET } = process.env
-
-if (JWT_SECRET === undefined) {
+if (process.env.JWT_SECRET === undefined) {
   console.error('JWT_SECRET is not defined')
   process.exit(1)
 }
+
+// TODO: switch to a more robust secret (e.g. a private key)
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const tokens: FastifyPluginCallback = (fastify, _, done) => {
   const prisma = new PrismaClient()
@@ -43,12 +44,27 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
       })
     }
 
-    const accessToken = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: '15m',
-    })
+    // Creating the first access and refresh tokens
+    const accessToken = await new SignJWT()
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setSubject(user.id)
+      .setExpirationTime('15m')
+      .sign(secret)
 
-    const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: '30d',
+    const refreshToken = await new SignJWT()
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setSubject(user.id)
+      .setExpirationTime('30d')
+      .sign(secret)
+
+    // This needs to be stored in the database
+    await prisma.refreshToken.create({
+      data: {
+        value: refreshToken,
+        user: { connect: { id: user.id } },
+      },
     })
 
     response.statusCode = 201
