@@ -4,6 +4,8 @@ import {
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library'
 
+import { AuthenticationError } from '@/errors'
+
 const SALT_LENGTH = 64 // In bytes
 const IV_LENGTH = 12 // In bytes (for AES-256-gcm, this is 96 bits based on the GCM specification)
 const ITERATIONS = 10000 // Recommendation is >= 10000
@@ -142,6 +144,10 @@ export function parseGenericError(
     apiError.statusCode = 500
     apiError.responseMessage =
       'Our servers encountered an unexpected error. We apologize for the inconvenience.'
+  } else if (error instanceof AuthenticationError) {
+    apiError.statusCode = 401
+    apiError.responseMessage = error.message
+    apiError.message = `Authentication failed for user ${error.id}`
   } else {
     apiError.statusCode = 500
     apiError.responseMessage =
