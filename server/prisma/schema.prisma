@@ -27,5 +27,4 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id])
   userId    String   @db.Uuid
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
