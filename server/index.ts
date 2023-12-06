@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import * as OTPAuth from 'otpauth'
 import { PrismaClient } from '@prisma/client'
 import { password } from 'bun'
-import { encrypt, decrypt } from './utils'
+import { encrypt, decrypt } from '@/utils'
 
 const prisma = new PrismaClient()
 
