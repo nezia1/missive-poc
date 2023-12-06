@@ -17,6 +17,7 @@ type EncryptedData = {
 
 interface ParseErrorOptions {
   notFoundMessage: string
+  duplicateMessage: string
 }
 
 interface APIError {
@@ -129,6 +130,12 @@ export function parseGenericError(
         apiError.responseMessage =
           options?.notFoundMessage ||
           'The resource you are trying to reach has not been found.'
+        break
+      case 'P2002':
+        apiError.statusCode = 409
+        apiError.responseMessage =
+          options?.duplicateMessage ||
+          'The resource you are trying to create already exists.'
         break
     }
   } else if (error instanceof PrismaClientInitializationError) {
