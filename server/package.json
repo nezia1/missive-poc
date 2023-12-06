@@ -16,6 +16,7 @@
   "dependencies": {
     "@prisma/client": "5.6.0",
     "fastify": "^4.24.3",
+    "jsonwebtoken": "^9.0.2",
     "otpauth": "^9.2.0"
   }
 }
