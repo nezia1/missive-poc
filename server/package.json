@@ -2,7 +2,11 @@
   "name": "poc-flutter-api",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
   "devDependencies": {
+    "@types/node": "^20.10.3",
     "bun-types": "latest",
     "prisma": "^5.6.0"
   },
@@ -11,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.6.0",
+    "fastify": "^4.24.3",
     "otpauth": "^9.2.0"
   }
 }
