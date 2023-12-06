@@ -3,13 +3,8 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
 
-import type { ResourceParams } from '@/global'
+import type { ResourceParams, UserRequestBody } from '@/global'
 import { parseGenericError } from '@/utils'
-
-interface UserRequestBody {
-  name: string
-  password: string
-}
 
 const users: FastifyPluginCallback = (fastify, _, done) => {
   const prisma = new PrismaClient()
