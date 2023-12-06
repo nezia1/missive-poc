@@ -1,17 +1,16 @@
+import Fastify from 'fastify'
 import * as OTPAuth from 'otpauth'
+import { PrismaClient } from '@prisma/client'
+import { password } from 'bun'
 import { encrypt, decrypt } from './utils'
 
-// OTP
-const totp = OTPAuth.URI.parse(
-  'otpauth://totp/Missive:OTPAuth?issuer=Missive&secret=QFEPVWPD4OXBPKTZCOUPIZ4URDI223VN&algorithm=SHA256&digits=6&period=30'
-)
+const prisma = new PrismaClient()
 
-console.time('encrypt')
+const fastify = Fastify({ logger: true })
 
-const encryptedTOTP = await encrypt(totp.toString(), 'sample-password')
-console.log('encrypted url: ' + encryptedTOTP.text)
-const decryptedTOTP = await decrypt('sample-password', encryptedTOTP)
-
-console.log('decrypted url: ' + decryptedTOTP)
-
-console.timeEnd('encrypt')
+try {
+  await fastify.listen({ port: 3000 })
+} catch (err) {
+  fastify.log.error(err)
+  process.exit(1)
+}
