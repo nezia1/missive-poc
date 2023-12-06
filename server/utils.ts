@@ -4,6 +4,13 @@ const SALT_LENGTH = 64 // In bytes
 const IV_LENGTH = 12 // In bytes (for AES-256-gcm, this is 96 bits based on the GCM specification)
 const ITERATIONS = 10000 // Recommendation is >= 10000
 
+type EncryptedData = {
+  text: string
+  salt: Buffer
+  iv: Buffer
+  tag: Buffer
+}
+
 /**
  * TODO: Separate key generation from ciphering
  * TODO: Also we should perhaps use a different algorithm for deriving the key from the password (use the password hash that we use for authentication?). Also 10000 iterations is too low according to the OWASP specification (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). However, since we are using ephemeral keys computed on the fly, this is probably not a big issue.
@@ -14,10 +21,7 @@ const ITERATIONS = 10000 // Recommendation is >= 10000
  * @param {string} textToEncrypt - Text to encrypt
  * @param {string} password - Password to use for encryption
  */
-export function encrypt(
-  textToEncrypt: string,
-  password: string
-): Promise<{ text: string; salt: Buffer; iv: Buffer; tag: Buffer }> {
+export function encrypt(textToEncrypt: string, password: string): Promise<EncryptedData> {
   const salt = Crypto.randomBytes(SALT_LENGTH)
 
   // Wrap in promise to use async/await (still using NodeJS' callback API)
@@ -49,13 +53,10 @@ export function encrypt(
 /**
  * Decrypts text using AES-256-GDM, by providing the password, the symmetrical key salt and IV used for encryption.
  * @param password
- * @param encryptedData
+ * @param {EncryptedData} encryptedData - Encrypted data
  * @returns {Promise<string>} Decrypted text
  */
-export function decrypt(
-  password: string,
-  encryptedData: { text: string; salt: Buffer; iv: Buffer; tag: Buffer }
-): Promise<string> {
+export function decrypt(password: string, encryptedData: EncryptedData): Promise<string> {
   const { text, salt, iv, tag } = encryptedData
 
   const encryptedBuffer = Buffer.from(text, 'base64')
