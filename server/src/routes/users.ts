@@ -38,6 +38,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
       return user
     },
   })
+
   fastify.post<{ Body: User }>('/', async (request, response) => {
     const newUser = await prisma.user.create({
       data: {
