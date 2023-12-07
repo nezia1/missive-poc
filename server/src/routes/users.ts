@@ -77,18 +77,22 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     }
   )
 
-  fastify.delete<{ Params: ResourceParams }>(
-    '/:id',
-    async (request, response) => {
+  fastify.route<{ Params: ResourceParams }>({
+    method: 'DELETE',
+    url: '/me',
+    preParsing: authenticationHook,
+    handler: async (request, response) => {
+      const accessToken = request.headers.authorization!.split(' ')[1]
+      const { payload } = await jwtVerify(accessToken, secret)
       await prisma.user.delete({
         where: {
-          id: request.params.id,
+          id: payload.sub,
         },
       })
 
       response.statusCode = 204
-    }
-  )
+    },
+  })
 
   fastify.setErrorHandler(async (error, request, reply) => {
     const apiError = parseGenericError(error, {
