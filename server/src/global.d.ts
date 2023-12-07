@@ -5,12 +5,13 @@ export interface ResourceParams {
 }
 interface BasicUpdateUserBody extends User {
   enable_totp?: false
+  password?: string
 }
 
 interface UpdateUserBodyWithTOTP extends User {
   enable_totp: true
-  totp_password: string
+  password: string
 }
 
-// This union type exists so that if a user has enable_totp set to true, the password field is required in order to be able to encrypt the TOTP secret using the user's password
+// This union type exists so that if a user has enable_totp set to true, the password field is required
 export type UpdateUserBody = BasicUpdateUserBody | UpdateUserBodyWithTOTP
