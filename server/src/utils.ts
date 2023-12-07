@@ -158,3 +158,43 @@ export function parseGenericError(
   apiError.message = error.message
   return apiError
 }
+
+export function generateRandomBase32String(length: number): string {
+  // Check if the Web Crypto API is available
+  if (!crypto || !crypto.getRandomValues) {
+    throw new Error('Web Crypto API not available')
+  }
+
+  // Define the Base32 characters
+  const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+
+  // Calculate the number of bytes needed
+  const bytesNeeded = Math.ceil((5 * length) / 8)
+
+  // Generate random values
+  const randomValues = new Uint8Array(bytesNeeded)
+  crypto.getRandomValues(randomValues)
+
+  // Build the Base32 string
+  let base32String = ''
+  let bits = 0
+  let bitsCount = 0
+
+  for (let i = 0; i < randomValues.length; i++) {
+    bits = (bits << 8) | randomValues[i]
+    bitsCount += 8
+
+    while (bitsCount >= 5) {
+      base32String += base32Chars[(bits >>> (bitsCount - 5)) & 0x1f]
+      bitsCount -= 5
+    }
+  }
+
+  // Add padding if needed
+  if (bitsCount > 0) {
+    base32String += base32Chars[(bits << (5 - bitsCount)) & 0x1f]
+  }
+
+  // Trim to the desired length
+  return base32String.slice(0, length)
+}
