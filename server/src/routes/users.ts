@@ -9,6 +9,7 @@ import type { ResourceParams, UpdateUserBody } from '@/global'
 import { User } from '@prisma/client'
 import { generateRandomBase32String, parseGenericError } from '@/utils'
 import { authenticationHook } from '@/hooks'
+import { AuthenticationError } from '@/errors'
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not defined')
@@ -59,9 +60,10 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
 
       // If the user wants to enable TOTP, we generate a new URL
       if (request.body.enable_totp) {
+        if (!request.body.password)
+          throw new AuthenticationError('Need a valid password to enable TOTP')
         totp = new OTPAuth.TOTP({
           issuer: 'POC Flutter',
-          label: request.body.name,
           algorithm: 'SHA256',
           digits: 6,
           period: 30,
@@ -74,10 +76,9 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
           id: request.authenticatedUser?.id,
         },
         data: {
-          name: request.body.name,
-          password: await password.hash(request.body.password),
-          //TODO: ENCRYPT TOTP WITH USER PASSWORD (THIS IS VERY IMPORTANT DO NOT STORE TOTP URLS IN PLAIN TEXT)
-          totp: totp ? totp.toString() : undefined,
+          // TODO: Update name
+          //TODO: ENCRYPT TOTP WITH USER PASSWORD (THIS IS VERY IMPORTANT DO NOT STORE TOTP URLS IN PLAIN TEXT). IV, salt and tag need to be stored somewhere too I think? Not sure where, need to look into this
+          totp: request.body.enable_totp && totp ? totp.toString() : undefined,
         },
       })
 
