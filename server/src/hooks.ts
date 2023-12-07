@@ -4,6 +4,7 @@ import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors'
 import { PrismaClient } from '@prisma/client'
 
 import { AuthenticationError } from '@/errors'
+
 const prisma = new PrismaClient()
 
 if (process.env.JWT_SECRET === null) {
@@ -12,6 +13,17 @@ if (process.env.JWT_SECRET === null) {
 }
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+
+interface AuthenticatedUser {
+  id: string
+}
+
+// This is needed to augment the FastifyRequest type and add the authenticatedUser property
+declare module 'fastify' {
+  interface FastifyRequest {
+    authenticatedUser?: AuthenticatedUser
+  }
+}
 
 export async function authenticationHook(
   request: FastifyRequest,
@@ -34,6 +46,11 @@ export async function authenticationHook(
     const user = await prisma.user.findUnique({ where: { id: payload.sub } })
 
     if (user === null) throw new AuthenticationError('Invalid access token')
+
+    // Inject the authenticated user ID in the request
+    request.authenticatedUser = {
+      id: user.id,
+    }
   } catch (error) {
     if (error instanceof JWTExpired) {
       throw new AuthenticationError('Access token expired')
