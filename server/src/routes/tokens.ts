@@ -13,12 +13,12 @@ if (process.env.JWT_SECRET === undefined) {
   process.exit(1)
 }
 
+const prisma = new PrismaClient()
 // TODO: switch to a more robust secret (e.g. a private key)
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
+// TODO: Add a route to refresh the access token
 const tokens: FastifyPluginCallback = (fastify, _, done) => {
-  const prisma = new PrismaClient()
-
   fastify.post<{ Body: User }>('/', async (request, response) => {
     const user = await prisma.user.findUnique({
       where: { name: request.body.name },
