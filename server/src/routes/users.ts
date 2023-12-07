@@ -3,10 +3,11 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { jwtVerify } from 'jose'
 import { password } from 'bun'
+import * as OTPAuth from 'otpauth'
 
-import type { ResourceParams } from '@/global'
+import type { ResourceParams, UpdateUserBody } from '@/global'
 import { User } from '@prisma/client'
-import { parseGenericError } from '@/utils'
+import { generateRandomBase32String, parseGenericError } from '@/utils'
 import { authenticationHook } from '@/hooks'
 
 if (process.env.JWT_SECRET === undefined) {
@@ -52,16 +53,51 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     return { id: newUser.id }
   })
 
-  fastify.patch<{ Params: ResourceParams; Body: User }>(
-    '/:id',
-    async (request, response) => {
+  fastify.route<{ Params: ResourceParams; Body: UpdateUserBody }>({
+    method: 'PATCH',
+    url: '/me',
+    preParsing: authenticationHook,
+    handler: async (request, response) => {
+      // TODO: inject user id from authentication hook instead of querying the database again
+      const accessToken = request.headers.authorization!.split(' ')[1]
+
+      const { payload } = await jwtVerify(accessToken, secret)
+
+      const user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: {
+          id: true,
+        },
+      })
+
+      if (user === null)
+        throw new PrismaClientKnownRequestError('User not found', {
+          code: 'P2025',
+          clientVersion: Prisma.prismaVersion.client,
+        })
+
+      let totp: OTPAuth.TOTP | undefined
+
+      // If the user wants to enable TOTP, we generate a new URL
+      if (request.body.enable_totp) {
+        totp = new OTPAuth.TOTP({
+          issuer: 'POC Flutter',
+          label: request.body.name,
+          algorithm: 'SHA256',
+          digits: 6,
+          period: 30,
+          secret: totp ? generateRandomBase32String(32) : undefined,
+        })
+      }
+
       const updatedUser = await prisma.user.update({
         where: {
-          id: request.params.id,
+          id: user.id,
         },
         data: {
           name: request.body.name,
           password: await password.hash(request.body.password),
+          totp: totp ? totp.toString() : undefined,
         },
       })
 
@@ -74,9 +110,14 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
           }
         )
 
+      if (totp) {
+        response.send({ totp: totp.toString() })
+        response.statusCode = 200
+        return
+      }
       response.statusCode = 204
-    }
-  )
+    },
+  })
 
   fastify.route<{ Params: ResourceParams }>({
     method: 'DELETE',
