@@ -72,7 +72,7 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
     return { accessToken }
   })
 
-  fastify.post('/refresh', async (request, response) => {
+  fastify.put('/', async (request, response) => {
     // Forcing non null since we know the cookie is set because of the authentication hook
     const refreshToken = request.cookies.refreshToken!
     const { payload } = await jwtVerify(refreshToken, secret)
