@@ -24,11 +24,8 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     url: '/me',
     preParsing: authenticationHook,
     handler: async (request, response) => {
-      const accessToken = request.headers.authorization!.split(' ')[1]
-
-      const { payload } = await jwtVerify(accessToken, secret)
       const user = await prisma.user.findUnique({
-        where: { id: payload.sub },
+        where: { id: request.authenticatedUser?.id },
       })
 
       if (user === null)
@@ -58,24 +55,6 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     url: '/me',
     preParsing: authenticationHook,
     handler: async (request, response) => {
-      // TODO: inject user id from authentication hook instead of querying the database again
-      const accessToken = request.headers.authorization!.split(' ')[1]
-
-      const { payload } = await jwtVerify(accessToken, secret)
-
-      const user = await prisma.user.findUnique({
-        where: { id: payload.sub },
-        select: {
-          id: true,
-        },
-      })
-
-      if (user === null)
-        throw new PrismaClientKnownRequestError('User not found', {
-          code: 'P2025',
-          clientVersion: Prisma.prismaVersion.client,
-        })
-
       let totp: OTPAuth.TOTP | undefined
 
       // If the user wants to enable TOTP, we generate a new URL
@@ -92,7 +71,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
 
       const updatedUser = await prisma.user.update({
         where: {
-          id: user.id,
+          id: request.authenticatedUser?.id,
         },
         data: {
           name: request.body.name,
@@ -102,13 +81,10 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
       })
 
       if (updatedUser === undefined)
-        throw new PrismaClientKnownRequestError(
-          'User to update was not found',
-          {
-            code: 'P2025',
-            clientVersion: Prisma.prismaVersion.client,
-          }
-        )
+        throw new PrismaClientKnownRequestError('User not found', {
+          code: 'P2025',
+          clientVersion: Prisma.prismaVersion.client,
+        })
 
       if (totp) {
         response.send({ totp: totp.toString() })
