@@ -76,6 +76,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
         data: {
           name: request.body.name,
           password: await password.hash(request.body.password),
+          //TODO: ENCRYPT TOTP WITH USER PASSWORD (THIS IS VERY IMPORTANT DO NOT STORE TOTP URLS IN PLAIN TEXT)
           totp: totp ? totp.toString() : undefined,
         },
       })
