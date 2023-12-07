@@ -25,13 +25,7 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
     })
 
     if (user === null)
-      throw new PrismaClientKnownRequestError(
-        'Username not found while trying to authenticate',
-        {
-          code: 'P2025',
-          clientVersion: Prisma.prismaVersion.client,
-        }
-      )
+      throw new AuthenticationError('Invalid username or password')
 
     const authenticated = await password.verify(
       request.body.password,
@@ -69,13 +63,18 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
 
     response.statusCode = 201
 
-    return { accessToken, refreshToken }
+    response.setCookie('refreshToken', refreshToken, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'strict',
+    })
+
+    return { accessToken }
   })
 
   fastify.setErrorHandler(async (error, request, reply) => {
     const apiError = parseGenericError(error)
 
-    console.error(error)
     request.log.error(apiError.message)
 
     return reply
