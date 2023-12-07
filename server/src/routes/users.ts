@@ -10,8 +10,8 @@ import { User } from '@prisma/client'
 import { generateRandomBase32String, parseGenericError } from '@/utils'
 import { authenticationHook } from '@/hooks'
 
-if (process.env.JWT_SECRET === undefined) {
-  console.error('COOKIE_SECRET is not defined')
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not defined')
   process.exit(1)
 }
 
@@ -81,7 +81,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
         },
       })
 
-      if (updatedUser === undefined)
+      if (!updatedUser)
         throw new PrismaClientKnownRequestError('User not found', {
           code: 'P2025',
           clientVersion: Prisma.prismaVersion.client,
