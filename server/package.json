@@ -15,6 +15,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@fastify/cookie": "^9.2.0",
     "@prisma/client": "5.6.0",
     "fastify": "^4.24.3",
     "jose": "^5.1.3",
