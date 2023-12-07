@@ -147,7 +147,9 @@ export function parseGenericError(
   } else if (error instanceof AuthenticationError) {
     apiError.statusCode = 401
     apiError.responseMessage = error.message
-    apiError.message = `Authentication failed for user ${error.id}`
+    if (error.id)
+      apiError.message = `Authentication failed for user ${error.id}`
+    else apiError.message = `Authentication failed (username not found)`
   } else {
     apiError.statusCode = 500
     apiError.responseMessage =
