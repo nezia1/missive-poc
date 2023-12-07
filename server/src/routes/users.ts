@@ -1,22 +1,43 @@
 import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { jwtVerify } from 'jose'
 import { password } from 'bun'
 
 import type { ResourceParams, UserRequestBody } from '@/global'
 import { parseGenericError } from '@/utils'
+import { authenticationHook } from '@/hooks'
+
+if (process.env.JWT_SECRET === undefined) {
+  console.error('COOKIE_SECRET is not defined')
+  process.exit(1)
+}
+
+const prisma = new PrismaClient()
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const users: FastifyPluginCallback = (fastify, _, done) => {
-  const prisma = new PrismaClient()
+  fastify.route({
+    method: 'GET',
+    url: '/me',
+    preParsing: authenticationHook,
+    handler: async (request, response) => {
+      const accessToken = request.headers.authorization!.split(' ')[1]
 
-  fastify.get('/', async (request, response) => {
-    const users = await prisma.user.findMany()
+      const { payload } = await jwtVerify(accessToken, secret)
+      const user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+      })
 
-    if (users.length === 0) response.statusCode = 204
+      if (user === null)
+        throw new PrismaClientKnownRequestError('User not found', {
+          code: 'P2025',
+          clientVersion: Prisma.prismaVersion.client,
+        })
 
-    return users
+      return user
+    },
   })
-
   fastify.post<{ Body: UserRequestBody }>('/', async (request, response) => {
     const newUser = await prisma.user.create({
       data: {
