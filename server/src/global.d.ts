@@ -2,7 +2,7 @@ export interface ResourceParams {
   id: string
 }
 
-export interface UserRequestBody {
+export interface User {
   name: string
   password: string
 }

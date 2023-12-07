@@ -4,7 +4,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
 import { SignJWT, jwtVerify } from 'jose'
 
-import { UserRequestBody } from '@/global'
+import { User } from '@/global'
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
 
@@ -19,7 +19,7 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 const tokens: FastifyPluginCallback = (fastify, _, done) => {
   const prisma = new PrismaClient()
 
-  fastify.post<{ Body: UserRequestBody }>('/', async (request, response) => {
+  fastify.post<{ Body: User }>('/', async (request, response) => {
     const user = await prisma.user.findUnique({
       where: { name: request.body.name },
     })

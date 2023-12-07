@@ -4,7 +4,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { jwtVerify } from 'jose'
 import { password } from 'bun'
 
-import type { ResourceParams, UserRequestBody } from '@/global'
+import type { ResourceParams, User } from '@/global'
 import { parseGenericError } from '@/utils'
 import { authenticationHook } from '@/hooks'
 
@@ -38,7 +38,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
       return user
     },
   })
-  fastify.post<{ Body: UserRequestBody }>('/', async (request, response) => {
+  fastify.post<{ Body: User }>('/', async (request, response) => {
     const newUser = await prisma.user.create({
       data: {
         name: request.body.name,
@@ -51,7 +51,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     return { id: newUser.id }
   })
 
-  fastify.patch<{ Params: ResourceParams; Body: UserRequestBody }>(
+  fastify.patch<{ Params: ResourceParams; Body: User }>(
     '/:id',
     async (request, response) => {
       const updatedUser = await prisma.user.update({
