@@ -4,7 +4,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
 import { SignJWT, jwtVerify } from 'jose'
 
-import { User } from '@/global'
+import { User } from '@prisma/client'
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
 

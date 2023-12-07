@@ -4,7 +4,8 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { jwtVerify } from 'jose'
 import { password } from 'bun'
 
-import type { ResourceParams, User } from '@/global'
+import type { ResourceParams } from '@/global'
+import { User } from '@prisma/client'
 import { parseGenericError } from '@/utils'
 import { authenticationHook } from '@/hooks'
 
