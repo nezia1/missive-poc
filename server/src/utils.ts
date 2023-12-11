@@ -60,6 +60,7 @@ export function encrypt(
         const cipher = Crypto.createCipheriv('aes-256-gcm', derivedKey, iv)
 
         // Ciphering text
+        // TODO: Append IV at beginning of cipher text
         let encrypted = cipher.update(textToEncrypt)
         encrypted = Buffer.concat([encrypted, cipher.final()])
 
