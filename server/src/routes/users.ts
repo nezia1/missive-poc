@@ -25,15 +25,9 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     url: '/me',
     preParsing: authenticationHook,
     handler: async (request, response) => {
-      const user = await prisma.user.findUnique({
+      const user = await prisma.user.findUniqueOrThrow({
         where: { id: request.authenticatedUser?.id },
       })
-
-      if (user === null)
-        throw new PrismaClientKnownRequestError('User not found', {
-          code: 'P2025',
-          clientVersion: Prisma.prismaVersion.client,
-        })
 
       return user
     },

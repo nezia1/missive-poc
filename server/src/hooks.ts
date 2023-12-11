@@ -43,9 +43,9 @@ export async function authenticationHook(
   try {
     // Get access token payload and check if it matches a user (jwtVerify throws an error if the token is invalid for any reason)
     const { payload } = await jwtVerify(accessToken, secret)
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } })
-
-    if (user === null) throw new AuthenticationError('Invalid access token')
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: payload.sub },
+    })
 
     // Inject the authenticated user ID in the request
     request.authenticatedUser = {

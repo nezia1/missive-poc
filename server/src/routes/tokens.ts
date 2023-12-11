@@ -76,8 +76,9 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
     // Forcing non null since we know the cookie is set because of the authentication hook
     const refreshToken = request.cookies.refreshToken!
     const { payload } = await jwtVerify(refreshToken, secret)
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } })
-    if (!user) throw new AuthenticationError('Invalid refresh token')
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: payload.sub },
+    })
 
     const accessToken = await new SignJWT()
       .setProtectedHeader({ alg: 'HS256' })
