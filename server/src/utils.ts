@@ -48,9 +48,7 @@ export function encrypt(
 ): Promise<EncryptedData> {
   const salt = Crypto.randomBytes(SALT_LENGTH)
 
-  // Wrap in promise to use async/await (still using NodeJS' callback API)
   return new Promise((resolve, reject) => {
-    // Derive a 32 bits key from the password
     Crypto.pbkdf2(
       password,
       salt,
@@ -61,22 +59,24 @@ export function encrypt(
         if (err) reject(err)
 
         const iv = Crypto.randomBytes(IV_LENGTH)
-
         const cipher = Crypto.createCipheriv('aes-256-gcm', derivedKey, iv)
 
         // Ciphering text
-        let encrypted = cipher.update(textToEncrypt)
-        encrypted = Buffer.concat([encrypted, cipher.final()])
+        let encrypted = cipher.update(textToEncrypt, 'utf8', 'base64')
+        encrypted += cipher.final('base64')
 
         const tag = cipher.getAuthTag()
 
-        encrypted = Buffer.concat([iv, tag, encrypted])
+        // Directly convert values to base64 strings
+        const ivBase64 = iv.toString('base64')
+        const tagBase64 = tag.toString('base64')
+        const encryptedTextBase64 = encrypted
 
         console.log('IV Length:', iv.length)
-        console.log('Tag Length:', tag.length)
-        // This is sent separately so it can be stored in the database, making it easier to decrypt later
+        console.log('Tag :', tagBase64)
+
         resolve({
-          text: encrypted.toString('base64'),
+          text: `${ivBase64}${tagBase64}${encryptedTextBase64}`,
           salt,
         })
       }
@@ -95,14 +95,23 @@ export function decrypt(
   encryptedData: EncryptedData
 ): Promise<string> {
   const { salt } = encryptedData
-  const iv = encryptedData.text.substring(0, IV_LENGTH * (4 / 3)) // Account for base64 encoding (each character = 6 bits)
+  const iv = Buffer.from(
+    encryptedData.text.substring(0, IV_LENGTH * (4 / 3)),
+    'base64'
+  )
 
-  // TODO: Fix the one off error (math is wrong, doesn't account for last character and padding)
+  // Ensure that the tag length is (IV_LENGTH + AUTH_TAG_LENGTH) bytes
   let tag = encryptedData.text.substring(
     IV_LENGTH * (4 / 3),
-    // prettier-ignore
-    (IV_LENGTH + AUTH_TAG_LENGTH) * 4 / 3
-  ) // Starts at IV length in base64, ends at auth tag length in base64
+    ((IV_LENGTH + AUTH_TAG_LENGTH) * 4) / 3
+  )
+
+  console.log(tag)
+
+  const cipher = Buffer.from(
+    encryptedData.text.substring(((IV_LENGTH + AUTH_TAG_LENGTH) * 4) / 3),
+    'base64'
+  )
 
   return new Promise((resolve, reject) => {
     Crypto.pbkdf2(
@@ -116,9 +125,9 @@ export function decrypt(
 
         const decipher = Crypto.createDecipheriv('aes-256-gcm', derivedKey, iv)
 
-        decipher.setAuthTag(Buffer.from(tag, 'base64'))
+        decipher.setAuthTag(tag)
 
-        let decrypted = decipher.update(Buffer.from(cipher, 'base64'))
+        let decrypted = decipher.update(cipher)
         decrypted = Buffer.concat([decrypted, decipher.final()])
 
         resolve(decrypted.toString('utf8'))
@@ -126,6 +135,7 @@ export function decrypt(
     )
   })
 }
+
 /**
  * Transforms a generic Typescript error into an APIError.
  * @param {Error} error - The error to parse.
