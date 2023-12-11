@@ -4,6 +4,11 @@ import {
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library'
 
+import {
+  JWTExpired,
+  JWSSignatureVerificationFailed,
+  JWTInvalid,
+} from 'jose/errors'
 import { AuthenticationError } from '@/errors'
 
 const SALT_LENGTH = 64 // In bytes
@@ -126,6 +131,7 @@ export function parseGenericError(
 ): APIError {
   const apiError: APIError = {} as APIError
 
+  // Database errors
   if (error instanceof PrismaClientKnownRequestError) {
     switch (error.code) {
       case 'P2025':
@@ -145,17 +151,25 @@ export function parseGenericError(
     apiError.statusCode = 500
     apiError.responseMessage =
       'Our servers encountered an unexpected error. We apologize for the inconvenience.'
-  } else if (error instanceof AuthenticationError) {
+
+    // JWT Errors
+  } else if (error instanceof JWTInvalid) {
     apiError.statusCode = 401
-    apiError.responseMessage = error.message
-    if (error.id)
-      apiError.message = `Authentication failed for user ${error.id}`
-    else apiError.message = `Authentication failed (username not found)`
+    apiError.responseMessage = 'Invalid token'
+  } else if (error instanceof JWTExpired) {
+    apiError.statusCode = 401
+    apiError.responseMessage = 'Expired token'
+  } else if (error instanceof JWSSignatureVerificationFailed) {
+    apiError.statusCode = 401
+    apiError.responseMessage = 'The token has been tampered with'
+
+    // Generic errors
   } else {
     apiError.statusCode = 500
     apiError.responseMessage =
       'Our servers encountered an unexpected error. We apologize for the inconvenience.'
   }
+
   apiError.message = error.message
   return apiError
 }
