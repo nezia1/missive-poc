@@ -20,6 +20,8 @@ if (process.env.COOKIE_SECRET === undefined) {
   process.exit(1)
 }
 
+const encrypted = await encrypt('This is a ciphered text', 'Super')
+const plainText = await decrypt('Super', encrypted)
 fastify.register(users, { prefix: '/users' })
 fastify.register(tokens, { prefix: '/tokens' })
 fastify.register(cookie, {

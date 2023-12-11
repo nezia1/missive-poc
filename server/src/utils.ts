@@ -13,13 +13,12 @@ import { AuthenticationError } from '@/errors'
 
 const SALT_LENGTH = 64 // In bytes
 const IV_LENGTH = 12 // In bytes (for AES-256-gcm, this is 96 bits based on the GCM specification)
+const AUTH_TAG_LENGTH = 16 // In bytes (for AES-256-gcm, the tag length is 128 bits)
 const ITERATIONS = 10000 // Recommendation is >= 10000
 
 type EncryptedData = {
   text: string
   salt: Buffer
-  iv: Buffer
-  tag: Buffer
 }
 
 interface ParseErrorOptions {
@@ -62,21 +61,23 @@ export function encrypt(
         if (err) reject(err)
 
         const iv = Crypto.randomBytes(IV_LENGTH)
+
         const cipher = Crypto.createCipheriv('aes-256-gcm', derivedKey, iv)
 
         // Ciphering text
-        // TODO: Append IV at beginning of cipher text
         let encrypted = cipher.update(textToEncrypt)
         encrypted = Buffer.concat([encrypted, cipher.final()])
 
         const tag = cipher.getAuthTag()
 
+        encrypted = Buffer.concat([iv, tag, encrypted])
+
+        console.log('IV Length:', iv.length)
+        console.log('Tag Length:', tag.length)
         // This is sent separately so it can be stored in the database, making it easier to decrypt later
         resolve({
           text: encrypted.toString('base64'),
           salt,
-          iv,
-          tag,
         })
       }
     )
@@ -93,9 +94,15 @@ export function decrypt(
   password: string,
   encryptedData: EncryptedData
 ): Promise<string> {
-  const { text, salt, iv, tag } = encryptedData
+  const { salt } = encryptedData
+  const iv = encryptedData.text.substring(0, IV_LENGTH * (4 / 3)) // Account for base64 encoding (each character = 6 bits)
 
-  const encryptedBuffer = Buffer.from(text, 'base64')
+  // TODO: Fix the one off error (math is wrong, doesn't account for last character and padding)
+  let tag = encryptedData.text.substring(
+    IV_LENGTH * (4 / 3),
+    // prettier-ignore
+    (IV_LENGTH + AUTH_TAG_LENGTH) * 4 / 3
+  ) // Starts at IV length in base64, ends at auth tag length in base64
 
   return new Promise((resolve, reject) => {
     Crypto.pbkdf2(
@@ -109,9 +116,9 @@ export function decrypt(
 
         const decipher = Crypto.createDecipheriv('aes-256-gcm', derivedKey, iv)
 
-        decipher.setAuthTag(tag)
+        decipher.setAuthTag(Buffer.from(tag, 'base64'))
 
-        let decrypted = decipher.update(encryptedBuffer)
+        let decrypted = decipher.update(Buffer.from(cipher, 'base64'))
         decrypted = Buffer.concat([decrypted, decipher.final()])
 
         resolve(decrypted.toString('utf8'))
