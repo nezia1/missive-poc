@@ -198,3 +198,15 @@ export function generateRandomBase32String(length: number): string {
   // Trim to the desired length
   return base32String.slice(0, length)
 }
+
+/**
+ * Excludes fields from a model.
+ * @param {T} model - The model to exclude fields from
+ **/
+export function exclude<T>(model: T, excludedFields: (keyof T)[]): any {
+  const newModel = { ...model }
+  excludedFields.forEach((field) => {
+    delete newModel[field]
+  })
+  return newModel
+}
