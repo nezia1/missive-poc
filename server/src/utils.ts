@@ -2,12 +2,13 @@ import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library'
-
 import {
   JWTExpired,
   JWSSignatureVerificationFailed,
   JWTInvalid,
 } from 'jose/errors'
+
+import { AuthenticationError } from './errors'
 
 interface ParseErrorOptions {
   notFoundMessage: string
@@ -64,14 +65,25 @@ export function parseGenericError(
     apiError.statusCode = 401
     apiError.responseMessage = 'The token has been tampered with'
 
-    // Generic errors
+    // Authentication errors (that are not JWT related)
+  } else if (error instanceof AuthenticationError) {
+    apiError.statusCode = 401
+    apiError.responseMessage = error.message
+    apiError.message = `Authentication failed for user ${error.id}: ${error.message}`
+  }
+
+  // Generic errors
+  else if (error instanceof SyntaxError) {
+    apiError.statusCode = 400
+    apiError.responseMessage = 'Invalid request body'
   } else {
     apiError.statusCode = 500
     apiError.responseMessage =
       'Our servers encountered an unexpected error. We apologize for the inconvenience.'
   }
 
-  apiError.message = error.message
+  // This ternary allows to override the default error message if needed
+  apiError.message = apiError.message ? apiError.message : error.message
   return apiError
 }
 
