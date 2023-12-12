@@ -4,10 +4,6 @@ import { PrismaClient } from '@prisma/client'
 import cookie from '@fastify/cookie'
 import type { FastifyCookieOptions } from '@fastify/cookie'
 
-import { password } from 'bun'
-import { encrypt, decrypt } from '@/utils'
-import { parseGenericError } from '@/utils'
-
 import users from '@/routes/users'
 import tokens from '@/routes/tokens'
 
@@ -20,8 +16,6 @@ if (process.env.COOKIE_SECRET === undefined) {
   process.exit(1)
 }
 
-const encrypted = await encrypt('This is a ciphered text', 'Super')
-const plainText = await decrypt('Super', encrypted)
 fastify.register(users, { prefix: '/users' })
 fastify.register(tokens, { prefix: '/tokens' })
 fastify.register(cookie, {
