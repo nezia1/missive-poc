@@ -7,8 +7,9 @@ import { SignJWT, jwtVerify } from 'jose'
 import { User } from '@prisma/client'
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
+import { JWTInvalid } from 'jose/errors'
 
-if (process.env.JWT_SECRET === undefined) {
+if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not defined')
   process.exit(1)
 }
@@ -75,6 +76,9 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
   fastify.put('/', async (request, response) => {
     // Forcing non null since we know the cookie is set because of the authentication hook
     const refreshToken = request.cookies.refreshToken!
+
+    if (!refreshToken) throw new JWTInvalid('Missing refresh token')
+
     const { payload } = await jwtVerify(refreshToken, secret)
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: payload.sub },
