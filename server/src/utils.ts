@@ -1,4 +1,3 @@
-import * as Crypto from 'crypto'
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
@@ -9,17 +8,6 @@ import {
   JWSSignatureVerificationFailed,
   JWTInvalid,
 } from 'jose/errors'
-import { AuthenticationError } from '@/errors'
-
-const SALT_LENGTH = 64 // In bytes
-const IV_LENGTH = 12 // In bytes (for AES-256-gcm, this is 96 bits based on the GCM specification)
-const AUTH_TAG_LENGTH = 16 // In bytes (for AES-256-gcm, the tag length is 128 bits)
-const ITERATIONS = 10000 // Recommendation is >= 10000
-
-type EncryptedData = {
-  text: string
-  salt: Buffer
-}
 
 interface ParseErrorOptions {
   notFoundMessage: string
@@ -30,110 +18,6 @@ interface APIError {
   responseMessage: string
   message: string
   statusCode: number
-}
-
-/**
- * TODO: Separate key generation from ciphering
- * TODO: Also we should perhaps use a different algorithm for deriving the key from the password (use the password hash that we use for authentication?). Also 10000 iterations is too low according to the OWASP specification (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). However, since we are using ephemeral keys computed on the fly, this is probably not a big issue.
- **/
-
-/**
- * Encrypts text using AES-256-GDM.
- * @param {string} textToEncrypt - Text to encrypt
- * @param {string} password - Password to use for encryption
- */
-export function encrypt(
-  textToEncrypt: string,
-  password: string
-): Promise<EncryptedData> {
-  const salt = Crypto.randomBytes(SALT_LENGTH)
-
-  return new Promise((resolve, reject) => {
-    Crypto.pbkdf2(
-      password,
-      salt,
-      ITERATIONS,
-      32,
-      'sha512',
-      (err, derivedKey) => {
-        if (err) reject(err)
-
-        const iv = Crypto.randomBytes(IV_LENGTH)
-        const cipher = Crypto.createCipheriv('aes-256-gcm', derivedKey, iv)
-
-        // Ciphering text
-        let encrypted = cipher.update(textToEncrypt, 'utf8', 'base64')
-        encrypted += cipher.final('base64')
-
-        const tag = cipher.getAuthTag()
-
-        // Directly convert values to base64 strings
-        const ivBase64 = iv.toString('base64')
-        const tagBase64 = tag.toString('base64')
-        const encryptedTextBase64 = encrypted
-
-        console.log('IV Length:', iv.length)
-        console.log('Tag :', tagBase64)
-
-        resolve({
-          text: `${ivBase64}${tagBase64}${encryptedTextBase64}`,
-          salt,
-        })
-      }
-    )
-  })
-}
-
-/**
- * Decrypts text using AES-256-GDM, by providing the password, the symmetrical key salt and IV used for encryption.
- * @param password
- * @param {EncryptedData} encryptedData - Encrypted data
- * @returns {Promise<string>} Decrypted text
- */
-export function decrypt(
-  password: string,
-  encryptedData: EncryptedData
-): Promise<string> {
-  const { salt } = encryptedData
-  const iv = Buffer.from(
-    encryptedData.text.substring(0, IV_LENGTH * (4 / 3)),
-    'base64'
-  )
-
-  // Ensure that the tag length is (IV_LENGTH + AUTH_TAG_LENGTH) bytes
-  let tag = encryptedData.text.substring(
-    IV_LENGTH * (4 / 3),
-    ((IV_LENGTH + AUTH_TAG_LENGTH) * 4) / 3
-  )
-
-  console.log(tag)
-
-  const cipher = Buffer.from(
-    encryptedData.text.substring(((IV_LENGTH + AUTH_TAG_LENGTH) * 4) / 3),
-    'base64'
-  )
-
-  return new Promise((resolve, reject) => {
-    Crypto.pbkdf2(
-      password,
-      salt,
-      ITERATIONS,
-      32,
-      'sha512',
-      (err, derivedKey) => {
-        if (err) reject(err)
-
-        const decipher = Crypto.createDecipheriv('aes-256-gcm', derivedKey, iv)
-
-        decipher.setAuthTag(tag)
-
-        let decrypted = decipher.update(cipher)
-        decrypted = Buffer.concat([decrypted, decipher.final()])
-
-        resolve(decrypted.toString('utf8'))
-      }
-    )
-  })
 }
 
 /**
