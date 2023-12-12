@@ -71,9 +71,8 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
           id: request.authenticatedUser?.id,
         },
         data: {
-          // TODO: Update name
-          //TODO: ENCRYPT TOTP WITH USER PASSWORD (THIS IS VERY IMPORTANT DO NOT STORE TOTP URLS IN PLAIN TEXT). IV, salt and tag need to be stored somewhere too I think? Not sure where, need to look into this
-          totp: request.body.enable_totp && totp ? totp.toString() : undefined,
+          totp_url:
+            request.body.enable_totp && totp ? totp.toString() : undefined,
         },
       })
 
