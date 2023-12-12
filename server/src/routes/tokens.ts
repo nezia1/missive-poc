@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
 import { SignJWT, jwtVerify } from 'jose'
+import * as OTPAuth from 'otpauth'
 
 import { User } from '@prisma/client'
 import { AuthenticationError } from '@/errors'
@@ -14,13 +15,15 @@ if (!process.env.JWT_SECRET) {
   process.exit(1)
 }
 
+type TOTPBody = {
+  totp?: string
+}
 const prisma = new PrismaClient()
 // TODO: switch to a more robust secret (e.g. a private key)
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
-// TODO: Add a route to refresh the access token
 const tokens: FastifyPluginCallback = (fastify, _, done) => {
-  fastify.post<{ Body: User }>('/', async (request, response) => {
+  fastify.post<{ Body: User & TOTPBody }>('/', async (request, response) => {
     const user = await prisma.user.findUnique({
       where: { name: request.body.name },
     })
@@ -28,17 +31,25 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
     if (user === null)
       throw new AuthenticationError('Invalid username or password')
 
-    const authenticated = await password.verify(
+    const passwordIsCorrect = await password.verify(
       request.body.password,
       user.password
     )
 
-    if (!authenticated) {
+    if (!passwordIsCorrect)
       throw new AuthenticationError('Invalid username or password', {
         id: user.id,
       })
-    }
 
+    if (user.totp_url) {
+      if (!request.body.totp)
+        return response.status(200).send({ status: 'totp_required' })
+      const totp = OTPAuth.URI.parse(user.totp_url)
+      const isTOTPValid = totp.validate({ token: request.body.totp })
+
+      if (isTOTPValid !== 0)
+        throw new AuthenticationError('Invalid TOTP', { id: user.id })
+    }
     // Creating the first access and refresh tokens
     const accessToken = await new SignJWT()
       .setProtectedHeader({ alg: 'HS256' })
