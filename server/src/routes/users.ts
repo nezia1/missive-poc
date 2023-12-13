@@ -29,7 +29,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
         where: { id: request.authenticatedUser?.id },
       })
 
-      return exclude(user, ['password'])
+      return exclude(user, ['password', 'totp_url'])
     },
   })
 
