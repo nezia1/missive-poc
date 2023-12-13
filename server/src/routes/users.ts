@@ -7,7 +7,7 @@ import * as OTPAuth from 'otpauth'
 
 import type { ResourceParams, UpdateUserBody } from '@/global'
 import { User } from '@prisma/client'
-import { generateRandomBase32String, parseGenericError } from '@/utils'
+import { generateRandomBase32String, parseGenericError, exclude } from '@/utils'
 import { authenticationHook } from '@/hooks'
 import { AuthenticationError } from '@/errors'
 
@@ -29,7 +29,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
         where: { id: request.authenticatedUser?.id },
       })
 
-      return user
+      return exclude(user, ['password'])
     },
   })
 
