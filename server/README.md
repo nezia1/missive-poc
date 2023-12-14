@@ -2,18 +2,16 @@
 
 Ce dossier contient la partie serveur de mon POC Flutter. Il contient une API REST qui permet de gérer et d'authentifier des utilisateurs, ainsi qu'une fonctionnalité d'authentification à deux facteurs (TOTP).
 
-# Installation
+## Installation
 
-## Prérequis
+### Prérequis
 
 - Bun (<https://bun.sh>)
 - Une base de données PostgreSQL
 
-## Procédure
+### Procédure
 
 Pour installer les dépendances :
-
-```bash
 
 ```bash
 bun install
