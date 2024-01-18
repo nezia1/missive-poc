@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'http.dart';
 
 void main() {
@@ -30,10 +31,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Flutter Auth'),
     );
   }
 }
@@ -57,6 +58,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final storage = const FlutterSecureStorage();
   String? _name;
   String? _password;
   String? _totp;
@@ -72,13 +74,17 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200 &&
           response.data['status'] == 'totp_required') {
         setState(() => _totpRequired = true);
+        return;
       }
 
-      print(response.headers['set-cookie']
+      // final accessToken = response.data['accessToken'];
+      final refreshToken = response.headers['set-cookie']
           ?.firstWhere((cookie) => cookie.contains('refreshToken'))
           .split(';')
           .map((e) => e.split('=').last)
-          .first);
+          .first;
+
+      storage.write(key: 'refreshToken', value: refreshToken);
       setState(() {
         _invalidCredentials = false;
         _totpInvalid = false;
@@ -149,11 +155,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     await login();
                     if (_totpRequired) {
                       if (!context.mounted) return;
+                      //TODO: move to separate widget
                       showModalBottomSheet(
                           context: context,
                           builder: (BuildContext context) {
-                            return Container(
-                                child: Center(
+                            return Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -171,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ],
                               ),
-                            ));
+                            );
                           });
                     }
                   }),
