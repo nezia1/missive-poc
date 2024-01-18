@@ -62,8 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _totp;
   bool _invalidCredentials = false;
   bool _totpRequired = false;
+  bool _totpInvalid = false;
 
-  Future<void> login() async {
+  Future<void> login([String? totp]) async {
     try {
       final response = await dio.post('/tokens',
           data: {'name': _name, 'password': _password, 'totp': _totp});
@@ -72,10 +73,22 @@ class _MyHomePageState extends State<MyHomePage> {
           response.data['status'] == 'totp_required') {
         setState(() => _totpRequired = true);
       }
-      _invalidCredentials = false;
+
+      print(response.headers['set-cookie']
+          ?.firstWhere((cookie) => cookie.contains('refreshToken'))
+          .split(';')
+          .map((e) => e.split('=').last)
+          .first);
+      setState(() {
+        _invalidCredentials = false;
+        _totpInvalid = false;
+      });
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         setState(() => _invalidCredentials = true);
+        e.response?.data['status'] == 'totp_invalid'
+            ? setState(() => _totpInvalid = true)
+            : null;
       }
     }
   }
@@ -142,8 +155,21 @@ class _MyHomePageState extends State<MyHomePage> {
                             return Container(
                                 child: Center(
                               child: Column(
-                                children: [Text('TOTP Required')],
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextField(
+                                      decoration: const InputDecoration(
+                                          labelText: 'TOTP'),
+                                      onChanged: (value) => _totp = value),
+                                  ElevatedButton(
+                                    child: const Text('Submit'),
+                                    onPressed: () async {
+                                      await login(_totp);
+                                      if (!mounted) return;
+                                      if (!_totpInvalid) Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
                               ),
                             ));
                           });
