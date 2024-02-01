@@ -1,7 +1,7 @@
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
-} from '@prisma/client/runtime/library'
+} from '@prisma/client/runtime/library.js'
 import {
   JWTExpired,
   JWSSignatureVerificationFailed,

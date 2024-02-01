@@ -1,12 +1,10 @@
 import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library.js'
 import { jwtVerify } from 'jose'
 import { password } from 'bun'
 import * as OTPAuth from 'otpauth'
 
-import type { ResourceParams, UpdateUserBody } from '@/global'
-import { User } from '@prisma/client'
 import { generateRandomBase32String, parseGenericError, exclude } from '@/utils'
 import { authenticationHook } from '@/hooks'
 import { AuthenticationError } from '@/errors'
@@ -24,7 +22,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     method: 'GET',
     url: '/me',
     preParsing: authenticationHook,
-    handler: async (request, response) => {
+    handler: async (request, _) => {
       const user = await prisma.user.findUniqueOrThrow({
         where: { id: request.authenticatedUser?.id },
       })
@@ -33,20 +31,23 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     },
   })
 
-  fastify.post<{ Body: User }>('/', async (request, response) => {
-    const newUser = await prisma.user.create({
-      data: {
-        name: request.body.name,
-        password: await password.hash(request.body.password),
-      },
-    })
+  fastify.post<{ Body: Prisma.UserCreateInput }>(
+    '/',
+    async (request, response) => {
+      const newUser = await prisma.user.create({
+        data: {
+          name: request.body.name,
+          password: await password.hash(request.body.password),
+        },
+      })
 
-    response.statusCode = 201
+      response.statusCode = 201
 
-    return { id: newUser.id }
-  })
+      return { id: newUser.id }
+    }
+  )
 
-  fastify.route<{ Params: ResourceParams; Body: UpdateUserBody }>({
+  fastify.route<{ Body: Prisma.UserUpdateInput & { enable_totp?: boolean } }>({
     method: 'PATCH',
     url: '/me',
     preParsing: authenticationHook,
@@ -91,7 +92,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     },
   })
 
-  fastify.route<{ Params: ResourceParams }>({
+  fastify.route({
     method: 'DELETE',
     url: '/me',
     preParsing: authenticationHook,

@@ -1,11 +1,9 @@
 import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { password } from 'bun'
 import { SignJWT, jwtVerify } from 'jose'
 import * as OTPAuth from 'otpauth'
 
-import { User } from '@prisma/client'
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
 import { JWTInvalid } from 'jose/errors'
@@ -15,15 +13,18 @@ if (!process.env.JWT_SECRET) {
   process.exit(1)
 }
 
-type TOTPBody = {
+const prisma = new PrismaClient()
+
+type UserLoginInput = Prisma.UserWhereUniqueInput & {
+  password: string
   totp?: string
 }
-const prisma = new PrismaClient()
+
 // TODO: switch to a more robust secret (e.g. a private key)
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const tokens: FastifyPluginCallback = (fastify, _, done) => {
-  fastify.post<{ Body: User & TOTPBody }>('/', async (request, response) => {
+  fastify.post<{ Body: UserLoginInput }>('/', async (request, response) => {
     const user = await prisma.user.findUnique({
       where: { name: request.body.name },
     })
@@ -113,6 +114,7 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
       .code(apiError.statusCode)
       .send({ error: apiError.responseMessage })
   })
+
   done()
 }
 
