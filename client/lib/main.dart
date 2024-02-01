@@ -170,8 +170,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ElevatedButton(
                                     child: const Text('Submit'),
                                     onPressed: () async {
-                                      await login(_totp);
                                       if (!mounted) return;
+                                      await login(_totp);
                                       if (!_totpInvalid) Navigator.pop(context);
                                     },
                                   ),
