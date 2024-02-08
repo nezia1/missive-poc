@@ -22,10 +22,11 @@ class LoginFailure extends LoginResult {
 
 enum AuthStatus { totpRequired, invalidCredentials, totpInvalid, error }
 
+// TODO separate login and TOTP login into two different functions (TOTP login should be a separate function returning a boolean to make it easier and clearer to handle the UI)
 class AuthService {
   AuthService._();
 
-  /// Logs in a user and returns a [LoginResult] object representing the result of the login attempt.
+  /// Logs in a user and returns a [LoginResult] object representing the result of the login attempt. If a TOTP is supplied, it will be used to complete the login process.
   static Future<LoginResult> login(String name, String password,
       [String? totp]) async {
     try {
