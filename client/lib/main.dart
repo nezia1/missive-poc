@@ -62,8 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    // forcing the value to be non-null because we've already checked for null (also type promotion does not work when variable is non final)
-    final loginResult = await AuthService.login(_name!, _password!, _totp);
+    final loginResult = await AuthService.login(_name, _password, _totp);
 
     if (loginResult is LoginSuccess) {
       // store tokens
