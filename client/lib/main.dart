@@ -8,7 +8,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  final title = 'Flutter Auth';
+  static const title = 'Flutter Auth';
   const MyApp({super.key});
 
   // This widget is the root of your application
@@ -46,6 +46,12 @@ class _MyHomePageState extends State<MyHomePage> {
       _totpInvalid = false;
 
   Future<void> handleLogin() async {
+    // reset state but don't rebuild the widget
+    _incompleteCredentials = false;
+    _invalidCredentials = false;
+    _totpRequired = false;
+    _totpInvalid = false;
+
     // key-value storage for sensitive data
     const secureStorage = FlutterSecureStorage();
     // regular key-value storage
@@ -53,7 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // state variables
     if (_name == null || _password == null) {
-      _incompleteCredentials = true;
+      setState(() => _incompleteCredentials = true);
       return;
     }
 
@@ -75,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
           break;
         case AuthStatus.invalidCredentials:
           setState(() => _invalidCredentials = true);
+          setState(() => _totpRequired = false);
           break;
         case AuthStatus.totpInvalid:
           setState(() => _totpInvalid = true);
