@@ -158,6 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 // regular key-value storage
                                 final prefs =
                                     await SharedPreferences.getInstance();
+
                                 final loginResult = await AuthService.login(
                                     _name, _password, totp);
 
