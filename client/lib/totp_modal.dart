@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// [onHandleTotp] is a callback that will be called when the user submits the TOTP. It should return a boolean representing whether the TOTP is valid or not.
 class TOTPModal extends StatefulWidget {
+  /// Function that will be called when the user submits the TOTP. It should handle the login process,
+  /// and return a boolean representing whether the TOTP is valid or not.
   final Future<bool> Function(String) onHandleTotp;
 
   const TOTPModal({super.key, required this.onHandleTotp});
