@@ -43,15 +43,14 @@ class _MyHomePageState extends State<MyHomePage> {
   // UI state
   bool _incompleteCredentials = false,
       _invalidCredentials = false,
-      _totpRequired = false,
-      _totpInvalid = false;
+      _totpRequired = false;
 
   Future<void> handleLogin() async {
     // reset state but don't rebuild the widget
     _incompleteCredentials = false;
     _invalidCredentials = false;
     _totpRequired = false;
-    _totpInvalid = false;
+
     // key-value storage for sensitive data
     const secureStorage = FlutterSecureStorage();
     // regular key-value storage
@@ -82,11 +81,8 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() => _invalidCredentials = true);
           setState(() => _totpRequired = false);
           break;
-        case AuthStatus.totpInvalid:
-          setState(() => _totpInvalid = true);
-          break;
-        // TODO handle error (and send it from the function)
-        case AuthStatus.error:
+        default:
+          // TODO handle error (and send it from the function)
           break;
       }
     }
