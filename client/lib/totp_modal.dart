@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// A widget made to handle TOTP authentication. It will display a modal with a text field for the user to input their TOTP, and a submit button. If the TOTP is invalid, it will display an error message.
+///
+/// [onHandleTotp] is a callback that will be called when the user submits the TOTP. It should return a boolean representing whether the TOTP is valid or not.
 class TOTPModal extends StatefulWidget {
   final Future<bool> Function(String) onHandleTotp;
 
