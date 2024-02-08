@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'http.dart';
+import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,7 +60,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final storage = const FlutterSecureStorage();
+  final secureStorage = const FlutterSecureStorage();
   String? _name;
   String? _password;
   String? _totp;
@@ -68,34 +70,44 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> login([String? totp]) async {
     try {
-      final response = await dio.post('/tokens',
-          data: {'name': _name, 'password': _password, 'totp': _totp});
+      final requestBody = jsonEncode({
+        'name': _name,
+        'password': _password,
+        if (totp != null) 'totp': totp
+      });
 
-      if (response.statusCode == 200 &&
-          response.data['status'] == 'totp_required') {
+      final response = await http.post(Uri.parse('${Constants.baseUrl}/tokens'),
+          headers: {'Content-Type': 'application/json'}, body: requestBody);
+
+      final jsonBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && jsonBody['status'] == 'totp_required') {
         setState(() => _totpRequired = true);
         return;
       }
 
+      if (response.statusCode == 401) {
+        setState(() => _invalidCredentials = true);
+        jsonBody['status'] == 'totp_invalid'
+            ? setState(() => _totpInvalid = true)
+            : null;
+        return;
+      }
       // final accessToken = response.data['accessToken'];
       final refreshToken = response.headers['set-cookie']
-          ?.firstWhere((cookie) => cookie.contains('refreshToken'))
-          .split(';')
-          .map((e) => e.split('=').last)
-          .first;
+          ?.split(';')
+          .firstWhere((cookie) => cookie.contains('refreshToken'))
+          .split('=')
+          .last;
 
-      storage.write(key: 'refreshToken', value: refreshToken);
+      secureStorage.write(key: 'refreshToken', value: refreshToken);
+
       setState(() {
         _invalidCredentials = false;
         _totpInvalid = false;
       });
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        setState(() => _invalidCredentials = true);
-        e.response?.data['status'] == 'totp_invalid'
-            ? setState(() => _totpInvalid = true)
-            : null;
-      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -168,13 +180,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                           labelText: 'TOTP'),
                                       onChanged: (value) => _totp = value),
                                   ElevatedButton(
-                                    child: const Text('Submit'),
-                                    onPressed: () async {
-                                      if (!mounted) return;
-                                      await login(_totp);
-                                      if (!_totpInvalid) Navigator.pop(context);
-                                    },
-                                  ),
+                                      child: const Text('Submit'),
+                                      onPressed: () async {
+                                        await login(_totp);
+                                        if (mounted && !_totpInvalid) {
+                                          Navigator.pop(context);
+                                        }
+                                      }),
+                                  _totpInvalid
+                                      ? const Text('Invalid TOTP')
+                                      : const SizedBox(),
                                 ],
                               ),
                             );
