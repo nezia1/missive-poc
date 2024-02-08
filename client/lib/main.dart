@@ -165,30 +165,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     await handleLogin();
                     if (_totpRequired) {
                       if (!context.mounted) return;
-                      //TODO: move to separate widget
+                      // TODO show TOTP modal from new widget
                       showModalBottomSheet(
                           context: context,
                           builder: (BuildContext context) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextField(
-                                      decoration: const InputDecoration(
-                                          labelText: 'TOTP'),
-                                      onChanged: (value) => _totp = value),
-                                  ElevatedButton(
-                                      child: const Text('Submit'),
-                                      onPressed: () async {
-                                        await handleLogin();
-                                        if (mounted && !_totpInvalid) {
-                                          Navigator.pop(context);
-                                        }
-                                      }),
-                                  if (_totpInvalid) const Text('Invalid TOTP'),
-                                ],
-                              ),
-                            );
+                            return const Placeholder();
                           });
                     }
                   }),
