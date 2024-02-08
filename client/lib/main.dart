@@ -35,8 +35,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String? _name;
-  String? _password;
+  String _name = '';
+  String _password = '';
   String? _totp;
 
   // UI state
@@ -51,14 +51,13 @@ class _MyHomePageState extends State<MyHomePage> {
     _invalidCredentials = false;
     _totpRequired = false;
     _totpInvalid = false;
-
     // key-value storage for sensitive data
     const secureStorage = FlutterSecureStorage();
     // regular key-value storage
     final prefs = await SharedPreferences.getInstance();
 
     // state variables
-    if (_name == null || _password == null) {
+    if (_name.trim() == '' || _password.trim() == '') {
       setState(() => _incompleteCredentials = true);
       return;
     }
