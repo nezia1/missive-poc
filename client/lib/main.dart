@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'auth_service.dart';
+import 'totp_modal.dart';
 
 void main() {
   runApp(const MyApp());
@@ -147,11 +148,35 @@ class _MyHomePageState extends State<MyHomePage> {
                     await handleLogin();
                     if (_totpRequired) {
                       if (!context.mounted) return;
-                      // TODO show TOTP modal from new widget
                       showModalBottomSheet(
                           context: context,
                           builder: (BuildContext context) {
-                            return const Placeholder();
+                            return TOTPModal(
+                              onHandleTotp: (totp) async {
+                                // key-value storage for sensitive data
+                                const secureStorage = FlutterSecureStorage();
+                                // regular key-value storage
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final loginResult = await AuthService.login(
+                                    _name, _password, totp);
+
+                                if (loginResult is LoginFailure) {
+                                  // TODO handle/log AuthStatus.error  (any other error than totpInvalid is concerning)
+                                  return false;
+                                }
+
+                                if (loginResult is LoginSuccess) {
+                                  await secureStorage.write(
+                                      key: 'refreshToken',
+                                      value: loginResult.refreshToken);
+                                  await prefs.setString(
+                                      'accessToken', loginResult.accessToken);
+                                }
+
+                                return true;
+                              },
+                            );
                           });
                     }
                   }),
