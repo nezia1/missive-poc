@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import 'constants.dart';
+import 'auth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,54 +58,54 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final secureStorage = const FlutterSecureStorage();
   String? _name;
   String? _password;
   String? _totp;
-  bool _invalidCredentials = false;
-  bool _totpRequired = false;
-  bool _totpInvalid = false;
 
-  Future<void> login([String? totp]) async {
-    try {
-      final requestBody = jsonEncode({
-        'name': _name,
-        'password': _password,
-        if (totp != null) 'totp': totp
-      });
+  // UI state
+  bool _incompleteCredentials = false,
+      _invalidCredentials = false,
+      _totpRequired = false,
+      _totpInvalid = false;
 
-      final response = await http.post(Uri.parse('${Constants.baseUrl}/tokens'),
-          headers: {'Content-Type': 'application/json'}, body: requestBody);
+  Future<void> handleLogin() async {
+    // key-value storage for sensitive data
+    const secureStorage = FlutterSecureStorage();
+    // regular key-value storage
+    final prefs = await SharedPreferences.getInstance();
 
-      final jsonBody = jsonDecode(response.body);
+    // state variables
+    if (_name == null || _password == null) {
+      _incompleteCredentials = true;
+      return;
+    }
 
-      if (response.statusCode == 200 && jsonBody['status'] == 'totp_required') {
-        setState(() => _totpRequired = true);
-        return;
+    // forcing the value to be non-null because we've already checked for null (also type promotion does not work when variable is non final)
+    final loginResult = await AuthService.login(_name!, _password!, _totp);
+
+    if (loginResult is LoginSuccess) {
+      // store tokens
+      await secureStorage.write(
+          key: 'refreshToken', value: loginResult.refreshToken);
+      await prefs.setString('accessToken', loginResult.accessToken);
+      // TODO implement page navigation after successful login
+    }
+
+    if (loginResult is LoginFailure) {
+      switch (loginResult.status) {
+        case AuthStatus.totpRequired:
+          setState(() => _totpRequired = true);
+          break;
+        case AuthStatus.invalidCredentials:
+          setState(() => _invalidCredentials = true);
+          break;
+        case AuthStatus.totpInvalid:
+          setState(() => _totpInvalid = true);
+          break;
+        // TODO handle error (and send it from the function)
+        case AuthStatus.error:
+          break;
       }
-
-      if (response.statusCode == 401) {
-        setState(() => _invalidCredentials = true);
-        jsonBody['status'] == 'totp_invalid'
-            ? setState(() => _totpInvalid = true)
-            : null;
-        return;
-      }
-      // final accessToken = response.data['accessToken'];
-      final refreshToken = response.headers['set-cookie']
-          ?.split(';')
-          .firstWhere((cookie) => cookie.contains('refreshToken'))
-          .split('=')
-          .last;
-
-      secureStorage.write(key: 'refreshToken', value: refreshToken);
-
-      setState(() {
-        _invalidCredentials = false;
-        _totpInvalid = false;
-      });
-    } catch (e) {
-      print(e);
     }
   }
 
@@ -164,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () async {
-                    await login();
+                    await handleLogin();
                     if (_totpRequired) {
                       if (!context.mounted) return;
                       //TODO: move to separate widget
@@ -182,21 +180,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ElevatedButton(
                                       child: const Text('Submit'),
                                       onPressed: () async {
-                                        await login(_totp);
+                                        await handleLogin();
                                         if (mounted && !_totpInvalid) {
                                           Navigator.pop(context);
                                         }
                                       }),
-                                  _totpInvalid
-                                      ? const Text('Invalid TOTP')
-                                      : const SizedBox(),
+                                  if (_totpInvalid) const Text('Invalid TOTP'),
                                 ],
                               ),
                             );
                           });
                     }
                   }),
-              if (_invalidCredentials) const Text('Invalid Credentials')
+              if (_invalidCredentials) const Text('Invalid Credentials'),
+              if (_incompleteCredentials) const Text('Incomplete Credentials')
             ],
           ),
         ),
