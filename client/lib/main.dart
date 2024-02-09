@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'features/authentication/login_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const FlutterPOC());
 }
 
-class MyApp extends StatelessWidget {
+class FlutterPOC extends StatelessWidget {
   static const title = 'Flutter Auth';
-  const MyApp({super.key});
+  const FlutterPOC({super.key});
 
   // This widget is the root of your application
   @override
