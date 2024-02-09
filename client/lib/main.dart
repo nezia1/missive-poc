@@ -22,7 +22,6 @@ class FlutterPOC extends StatelessWidget {
   static const title = 'Flutter Auth';
   const FlutterPOC({super.key});
 
-  // This widget is the root of your application
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
