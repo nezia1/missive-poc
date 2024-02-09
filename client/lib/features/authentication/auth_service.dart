@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'constants.dart';
+import '../../constants/api.dart';
 
 // this abstract class is used to represent the result of a login attempt
 // this is needed because the login attempt can result in different outcomes, and we want to be able to represent those outcomes in a type-safe way
@@ -33,8 +33,10 @@ class AuthService {
       final requestBody = jsonEncode(
           {'name': name, 'password': password, if (totp != null) 'totp': totp});
 
-      final response = await http.post(Uri.parse('${Constants.baseUrl}/tokens'),
-          headers: {'Content-Type': 'application/json'}, body: requestBody);
+      final response = await http.post(
+          Uri.parse('${ApiConstants.baseUrl}/tokens'),
+          headers: {'Content-Type': 'application/json'},
+          body: requestBody);
 
       final jsonBody = jsonDecode(response.body);
 
