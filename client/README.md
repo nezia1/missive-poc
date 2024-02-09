@@ -1,16 +1,10 @@
-# client
+# Client du POC
 
-A new Flutter project.
+Ce dossier contient le code source du client de mon POC.
 
-## Getting Started
+## Structure du projet
 
-This project is a starting point for a Flutter application.
+Le projet est divisé avec la structure standard de Flutter. La structure du dossier lib étant libre, j'ai choisi de partir sur une approche *feature-first* qui me permet de séparer les différentes fonctionnalités de l'application dans des dossiers distincts.:
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **constants** : Contient les constantes du projet
+- **features** : Contient les différentes fonctionnalités de l'application (contient les écrans, les modèles, les services, ...)
