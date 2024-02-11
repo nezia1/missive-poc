@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch API",
+            "type": "bun",
+            "request": "launch",
+            "program": "${workspaceFolder}/server/index.ts",
+
+        },
+        {
+            "name": "Launch Client",
+            "request": "launch",
+            "type": "dart",
+            "program": "${workspaceFolder}/client/lib/main.dart",
+            "flutterMode": "debug"
+        }
+
+    ],
+    "compounds": [
+        {
+            "name": "Launch API and Client",
+            "configurations": ["Launch API", "Launch Client"]
+        }
+    ]
+}
