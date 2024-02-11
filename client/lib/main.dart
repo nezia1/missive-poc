@@ -30,7 +30,6 @@ class FlutterPOC extends StatelessWidget {
       );
 
   late final GoRouter _router = GoRouter(
-    initialLocation: '/',
     routes: [
       GoRoute(
         path: '/',
@@ -39,14 +38,11 @@ class FlutterPOC extends StatelessWidget {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(title: FlutterPOC.title),
-        redirect: (context, state) {
-          final AuthProvider authProvider = context.watch();
-          print(authProvider.isLoggedIn);
-          if (!authProvider.isLoggedIn) return '/login';
-          print(authProvider.isLoggedIn);
-          return null;
-        },
       ),
     ],
+    redirect: (context, state) {
+      return _authProvider.isLoggedIn ? '/' : '/login';
+    },
+    refreshListenable: _authProvider,
   );
 }

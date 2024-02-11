@@ -72,7 +72,6 @@ class AuthProvider extends ChangeNotifier {
       isLoggedIn = true;
       notifyListeners();
 
-      // the refresh token will always be present in the response, so we can safely use the `!` operator here
       return LoginSuccess();
     } catch (e) {
       // TODO: improve error handling
