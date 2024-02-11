@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'features/authentication/login_screen.dart';
+import 'features/authentication/auth_service.dart';
+import 'features/home/home_screen.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
   runApp(const FlutterPOC());
 }
 
+// TODO add provider for AuthService
 final GoRouter _router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/login',
   routes: [
     GoRoute(
       path: '/',
+      builder: (context, state) {
+        return const HomeScreen(title: FlutterPOC.title);
+      },
+    ),
+    GoRoute(
+      path: '/login',
       builder: (context, state) {
         return const LoginScreen(title: FlutterPOC.title);
       },
