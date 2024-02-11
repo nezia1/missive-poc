@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
 import 'totp_modal.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,25 +28,23 @@ class _LoginScreenState extends State<LoginScreen> {
     _invalidCredentials = false;
     _totpRequired = false;
 
-    final authService = AuthService();
-
     if (_name.trim() == '' || _password.trim() == '') {
       setState(() => _incompleteCredentials = true);
       return;
     }
 
-    final loginResult = await authService.login(_name, _password, _totp);
+    final loginResult = await Provider.of<AuthProvider>(context, listen: false)
+        .login(_name, _password, _totp);
 
     if (loginResult is LoginFailure) {
       switch (loginResult.status) {
-        case AuthStatus.totpRequired:
+        case AuthErrorStatus.totpRequired:
           setState(() => _totpRequired = true);
           break;
-        case AuthStatus.invalidCredentials:
+        case AuthErrorStatus.invalidCredentials:
           setState(() => _invalidCredentials = true);
           setState(() => _totpRequired = false);
           break;
-        // TODO implement page navigation after successful login
         default:
           // TODO handle error (and send it from the function)
           break;
@@ -88,19 +87,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           builder: (BuildContext context) {
                             return TOTPModal(
                               onHandleTotp: (totp) async {
-                                final authService = AuthService();
-                                final loginResult = await authService.login(
-                                    _name, _password, totp);
+                                final loginResult =
+                                    await Provider.of<AuthProvider>(context,
+                                            listen: false)
+                                        .login(_name, _password, totp);
 
                                 if (loginResult is LoginFailure) {
                                   // TODO handle/log AuthStatus.error  (any other error than totpInvalid is concerning)
                                   return false;
                                 }
-
-                                if (loginResult is LoginSuccess) {
-                                  // TODO redirect to home page
-                                }
-
                                 return true;
                               },
                             );
