@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'auth_service.dart';
 import 'totp_modal.dart';
 
@@ -29,26 +27,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _invalidCredentials = false;
     _totpRequired = false;
 
-    // key-value storage for sensitive data
-    const secureStorage = FlutterSecureStorage();
-    // regular key-value storage
-    final prefs = await SharedPreferences.getInstance();
+    final authService = AuthService();
 
-    // state variables
     if (_name.trim() == '' || _password.trim() == '') {
       setState(() => _incompleteCredentials = true);
       return;
     }
 
-    final loginResult = await AuthService.login(_name, _password, _totp);
-
-    if (loginResult is LoginSuccess) {
-      // store tokens
-      await secureStorage.write(
-          key: 'refreshToken', value: loginResult.refreshToken);
-      await prefs.setString('accessToken', loginResult.accessToken);
-      // TODO implement page navigation after successful login
-    }
+    final loginResult = await authService.login(_name, _password, _totp);
 
     if (loginResult is LoginFailure) {
       switch (loginResult.status) {
@@ -59,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() => _invalidCredentials = true);
           setState(() => _totpRequired = false);
           break;
+        // TODO implement page navigation after successful login
         default:
           // TODO handle error (and send it from the function)
           break;
@@ -101,13 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           builder: (BuildContext context) {
                             return TOTPModal(
                               onHandleTotp: (totp) async {
-                                // key-value storage for sensitive data
-                                const secureStorage = FlutterSecureStorage();
-                                // regular key-value storage
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-
-                                final loginResult = await AuthService.login(
+                                final authService = AuthService();
+                                final loginResult = await authService.login(
                                     _name, _password, totp);
 
                                 if (loginResult is LoginFailure) {
@@ -116,11 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
 
                                 if (loginResult is LoginSuccess) {
-                                  await secureStorage.write(
-                                      key: 'refreshToken',
-                                      value: loginResult.refreshToken);
-                                  await prefs.setString(
-                                      'accessToken', loginResult.accessToken);
+                                  // TODO redirect to home page
                                 }
 
                                 return true;

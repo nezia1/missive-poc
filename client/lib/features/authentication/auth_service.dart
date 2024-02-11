@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../constants/api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // this abstract class is used to represent the result of a login attempt
 // this is needed because the login attempt can result in different outcomes, and we want to be able to represent those outcomes in a type-safe way
@@ -9,10 +12,7 @@ abstract class LoginResult {}
 
 // when the login attempt is successful, we have to return the refresh token and the access token
 class LoginSuccess extends LoginResult {
-  final String refreshToken;
-  final String accessToken;
-
-  LoginSuccess(this.refreshToken, this.accessToken);
+  LoginSuccess();
 }
 
 class LoginFailure extends LoginResult {
@@ -24,11 +24,18 @@ enum AuthStatus { totpRequired, invalidCredentials, totpInvalid, error }
 
 // TODO separate login and TOTP login into two different functions (TOTP login should be a separate function returning a boolean to make it easier and clearer to handle the UI)
 class AuthService {
-  AuthService._();
+  String? _accessToken;
+  ValueNotifier<bool> isLoggedIn = ValueNotifier(false);
+
+  String get accessToken => _accessToken ?? '';
 
   /// Logs in a user and returns a [LoginResult] object representing the result of the login attempt. If a TOTP is supplied, it will be used to complete the login process.
-  static Future<LoginResult> login(String name, String password,
+  Future<LoginResult> login(String name, String password,
       [String? totp]) async {
+    // key-value storage for sensitive data
+    const secureStorage = FlutterSecureStorage();
+    // regular key-value storage
+    final prefs = await SharedPreferences.getInstance();
     try {
       final requestBody = jsonEncode(
           {'name': name, 'password': password, if (totp != null) 'totp': totp});
@@ -62,8 +69,16 @@ class AuthService {
           .split('=')
           .last;
 
+      // store tokens
+      _accessToken = accessToken;
+      await secureStorage.write(key: 'refreshToken', value: refreshToken);
+      await prefs.setString('accessToken', accessToken);
+
+      isLoggedIn.value = true;
+
+      print(isLoggedIn.value);
       // the refresh token will always be present in the response, so we can safely use the `!` operator here
-      return LoginSuccess(refreshToken!, accessToken);
+      return LoginSuccess();
     } catch (e) {
       // TODO: improve error handling
       print(e);
