@@ -20,9 +20,10 @@ enum AuthErrorStatus { invalidCredentials, totpRequired, totpInvalid, error }
 
 class AuthProvider extends ChangeNotifier {
   String? _accessToken;
-  bool isLoggedIn = false;
+  bool _isLoggedIn = false;
 
   String get accessToken => _accessToken ?? '';
+  bool get isLoggedIn => _isLoggedIn;
 
   /// Logs in a user and returns a [LoginResult], that can either be [LoginSuccess] or [LoginFailure].
   Future<LoginResult> login(String name, String password,
@@ -69,7 +70,7 @@ class AuthProvider extends ChangeNotifier {
       await secureStorage.write(key: 'refreshToken', value: refreshToken);
       await prefs.setString('accessToken', accessToken);
 
-      isLoggedIn = true;
+      _isLoggedIn = true;
       notifyListeners();
 
       return LoginSuccess();
