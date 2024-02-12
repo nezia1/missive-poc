@@ -15,9 +15,8 @@ class FlutterPOC extends StatelessWidget {
   static const title = 'Flutter Auth';
 
   @override
-  Widget build(BuildContext context) =>
-      ChangeNotifierProvider<AuthProvider>.value(
-        value: _authProvider,
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+        create: (_) => _authProvider,
         child: MaterialApp.router(
           title: title,
           theme: ThemeData(
@@ -41,7 +40,12 @@ class FlutterPOC extends StatelessWidget {
       ),
     ],
     redirect: (context, state) {
-      return _authProvider.isLoggedIn ? '/' : '/login';
+      if (!_authProvider.isLoggedIn) {
+        return '/login';
+      }
+      // TODO figure out why it redirects twice, this will do for now
+      if (_router.canPop()) _router.pop();
+      return '/';
     },
     refreshListenable: _authProvider,
   );
