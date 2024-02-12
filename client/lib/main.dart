@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'features/authentication/login_screen.dart';
-import 'features/authentication/auth_provider.dart';
-import 'features/home/home_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:poc_flutter_client/features/home/screens/settings_screen.dart';
+import 'package:poc_flutter_client/features/authentication/login_screen.dart';
+import 'package:poc_flutter_client/features/authentication/auth_provider.dart';
+import 'package:poc_flutter_client/features/home/screens/home_screen.dart';
 
 void main() => runApp(FlutterPOC());
 
@@ -38,14 +39,22 @@ class FlutterPOC extends StatelessWidget {
         path: '/login',
         builder: (context, state) => const LoginScreen(title: FlutterPOC.title),
       ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      )
     ],
     redirect: (context, state) {
-      if (!_authProvider.isLoggedIn) {
-        return '/login';
+      final loggingIn = state.matchedLocation == '/login';
+      print(loggingIn);
+      if (!_authProvider.isLoggedIn) return loggingIn ? null : '/login';
+
+      if (loggingIn) {
+        // TODO figure out why it redirects twice, this will do for now
+        if (_router.canPop()) _router.pop();
+        return '/';
       }
-      // TODO figure out why it redirects twice, this will do for now
-      if (_router.canPop()) _router.pop();
-      return '/';
+      return null;
     },
     refreshListenable: _authProvider,
   );
