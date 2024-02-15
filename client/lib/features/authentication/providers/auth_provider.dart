@@ -42,7 +42,14 @@ class AuthProvider extends ChangeNotifier {
   String? _accessToken;
   bool _isLoggedIn = false;
 
-  String get accessToken => _accessToken ?? '';
+  /// Returns the access token as [String], or null if it's not available.
+  Future<String?> get accessToken async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_accessToken != null) return _accessToken;
+
+    return prefs.getString('accessToken');
+  }
+
   bool get isLoggedIn => _isLoggedIn;
 
   /// Logs in a user and returns a [AuthenticationResult], that can either be [AuthenticationSuccess] or [AuthenticationError].
