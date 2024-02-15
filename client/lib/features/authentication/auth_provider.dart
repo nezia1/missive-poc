@@ -100,4 +100,18 @@ class AuthProvider extends ChangeNotifier {
       return AuthenticationError(e.message);
     }
   }
+
+  /// Logs out a user and clears the stored tokens.
+  /// TODO delete the refresh token from the server
+  void logout() async {
+    const secureStorage = FlutterSecureStorage();
+    final prefs = await SharedPreferences.getInstance();
+
+    await secureStorage.delete(key: 'refreshToken');
+    await prefs.remove('accessToken');
+
+    _accessToken = null;
+    _isLoggedIn = false;
+    notifyListeners();
+  }
 }
