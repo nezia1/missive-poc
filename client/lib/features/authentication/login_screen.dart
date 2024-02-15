@@ -19,11 +19,16 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   bool _totpRequired = false;
+  bool _loggingIn = false;
 
   Future<void> handleLogin() async {
     // reset state but don't rebuild the widget
     _totpRequired = false;
-    _errorMessage = '';
+
+    setState(() {
+      _loggingIn = true;
+      _errorMessage = '';
+    });
 
     if (_name.trim() == '' || _password.trim() == '') {
       setState(() {
@@ -46,6 +51,16 @@ class _LoginScreenState extends State<LoginScreen> {
       default:
         break;
     }
+
+    setState(() => _loggingIn = false);
+    if (_errorMessage != null && _errorMessage!.isNotEmpty && mounted) {
+      final errorSnackBar = SnackBar(
+          content: Text('Login failed: $_errorMessage'),
+          action: SnackBarAction(
+              label: 'Dismiss',
+              onPressed: ScaffoldMessenger.of(context).hideCurrentSnackBar));
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar);
+    }
   }
 
   @override
@@ -54,6 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        bottom: _loggingIn
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(4.0),
+                child: LinearProgressIndicator())
+            : null,
       ),
       body: Center(
         child: Padding(
@@ -100,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           });
                     }
                   }),
-              if (_errorMessage != null) Text(_errorMessage!),
             ],
           ),
         ),
