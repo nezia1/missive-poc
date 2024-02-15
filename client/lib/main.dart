@@ -46,7 +46,7 @@ class FlutterPOC extends StatelessWidget {
     ],
     redirect: (context, state) {
       final loggingIn = state.matchedLocation == '/login';
-      print(loggingIn);
+
       if (!_authProvider.isLoggedIn) return loggingIn ? null : '/login';
 
       if (loggingIn) {
