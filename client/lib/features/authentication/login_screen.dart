@@ -48,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       case AuthenticationError():
         // TODO handle/log error
         print(loginResult.message);
+        setState(() => _errorMessage = 'An unexpected error occurred');
       default:
         break;
     }
