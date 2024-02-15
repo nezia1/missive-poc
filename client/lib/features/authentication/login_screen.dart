@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'auth_provider.dart';
+import 'providers/auth_provider.dart';
 import 'totp_modal.dart';
 
 class LoginScreen extends StatefulWidget {

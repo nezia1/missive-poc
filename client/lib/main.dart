@@ -1,10 +1,15 @@
+// external packages
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+
+// screens
 import 'package:poc_flutter_client/features/home/screens/settings_screen.dart';
 import 'package:poc_flutter_client/features/authentication/login_screen.dart';
-import 'package:poc_flutter_client/features/authentication/auth_provider.dart';
 import 'package:poc_flutter_client/features/home/screens/home_screen.dart';
+
+// providers
+import 'package:poc_flutter_client/features/authentication/providers/auth_provider.dart';
 
 void main() => runApp(FlutterPOC());
 
