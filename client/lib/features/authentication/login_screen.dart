@@ -16,39 +16,35 @@ class _LoginScreenState extends State<LoginScreen> {
   String _name = '';
   String _password = '';
   String? _totp;
+  String? _errorMessage;
 
-  // UI state
-  bool _incompleteCredentials = false,
-      _invalidCredentials = false,
-      _totpRequired = false;
+  bool _totpRequired = false;
 
   Future<void> handleLogin() async {
     // reset state but don't rebuild the widget
-    _incompleteCredentials = false;
-    _invalidCredentials = false;
     _totpRequired = false;
+    _errorMessage = '';
 
     if (_name.trim() == '' || _password.trim() == '') {
-      setState(() => _incompleteCredentials = true);
+      setState(() {
+        _errorMessage = 'Please fill in all fields';
+      });
       return;
     }
 
     final loginResult = await Provider.of<AuthProvider>(context, listen: false)
         .login(_name, _password, _totp);
 
-    if (loginResult is LoginFailure) {
-      switch (loginResult.status) {
-        case AuthErrorStatus.totpRequired:
-          setState(() => _totpRequired = true);
-          break;
-        case AuthErrorStatus.invalidCredentials:
-          setState(() => _invalidCredentials = true);
-          setState(() => _totpRequired = false);
-          break;
-        default:
-          // TODO handle error (and send it from the function)
-          break;
-      }
+    switch (loginResult) {
+      case TOTPRequiredError():
+        setState(() => _totpRequired = true);
+      case InvalidCredentialsError():
+        setState(() => _errorMessage = 'Your credentials are invalid');
+      case AuthenticationError():
+        // TODO handle/log error
+        print(loginResult.message);
+      default:
+        break;
     }
   }
 
@@ -85,25 +81,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       showModalBottomSheet(
                           context: context,
                           builder: (BuildContext context) {
-                            return TOTPModal(
-                              onHandleTotp: (totp) async {
-                                final loginResult =
-                                    await Provider.of<AuthProvider>(context,
-                                            listen: false)
-                                        .login(_name, _password, totp);
-
-                                if (loginResult is LoginFailure) {
-                                  // TODO handle/log AuthStatus.error  (any other error than totpInvalid is concerning)
+                            return TOTPModal(onHandleTotp: (totp) async {
+                              final loginResult =
+                                  await Provider.of<AuthProvider>(context,
+                                          listen: false)
+                                      .login(_name, _password, totp);
+                              switch (loginResult) {
+                                case AuthenticationSuccess():
+                                  return true;
+                                case TOTPInvalidError():
                                   return false;
-                                }
-                                return true;
-                              },
-                            );
+                                case AuthenticationError():
+                                  print(loginResult.message);
+                                  // TODO handle/log AuthStatus.error  (a generic error here is concerning)
+                                  return false;
+                              }
+                            });
                           });
                     }
                   }),
-              if (_invalidCredentials) const Text('Invalid Credentials'),
-              if (_incompleteCredentials) const Text('Incomplete Credentials')
+              if (_errorMessage != null) Text(_errorMessage!),
             ],
           ),
         ),

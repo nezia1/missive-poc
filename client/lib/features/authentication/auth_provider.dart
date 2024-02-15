@@ -5,19 +5,39 @@ import '../../constants/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-abstract class LoginResult {}
+// Represents the result of an authentication attempt.
+// It allows us to represent a generic result of an authentication attempt, and then have specific subtypes for different types of successes/errors so we can parse them accordingly and build our UI logic around it.
+/// Generic result of an authentication attempt.
+sealed class AuthenticationResult {}
 
-class LoginSuccess extends LoginResult {
-  LoginSuccess();
+/// Represents a successful authentication attempt.
+class AuthenticationSuccess extends AuthenticationResult {
+  AuthenticationSuccess();
 }
 
-class LoginFailure extends LoginResult {
-  final AuthErrorStatus status;
-  LoginFailure(this.status);
+/// Represents a generic error during an authentication attempt.
+class AuthenticationError extends AuthenticationResult implements Error {
+  @override
+  StackTrace get stackTrace => StackTrace.current;
+
+  final String? message;
+
+  AuthenticationError([this.message]);
 }
 
-enum AuthErrorStatus { invalidCredentials, totpRequired, totpInvalid, error }
+class InvalidCredentialsError extends AuthenticationError {
+  InvalidCredentialsError();
+}
 
+class TOTPRequiredError extends AuthenticationError {
+  TOTPRequiredError();
+}
+
+class TOTPInvalidError extends AuthenticationError {
+  TOTPInvalidError();
+}
+
+/// Provides authentication functionality (logging in and out, storing tokens).
 class AuthProvider extends ChangeNotifier {
   String? _accessToken;
   bool _isLoggedIn = false;
@@ -25,13 +45,14 @@ class AuthProvider extends ChangeNotifier {
   String get accessToken => _accessToken ?? '';
   bool get isLoggedIn => _isLoggedIn;
 
-  /// Logs in a user and returns a [LoginResult], that can either be [LoginSuccess] or [LoginFailure].
-  Future<LoginResult> login(String name, String password,
+  /// Logs in a user and returns a [AuthenticationResult], that can either be [AuthenticationSuccess] or [AuthenticationError].
+  Future<AuthenticationResult> login(String name, String password,
       [String? totp]) async {
     // key-value storage for sensitive data
     const secureStorage = FlutterSecureStorage();
     // regular key-value storage
     final prefs = await SharedPreferences.getInstance();
+
     try {
       final requestBody = jsonEncode(
           {'name': name, 'password': password, if (totp != null) 'totp': totp});
@@ -45,15 +66,15 @@ class AuthProvider extends ChangeNotifier {
 
       // 200 represents a successful login attempt, but the user needs to provide a TOTP
       if (response.statusCode == 200 && jsonBody['status'] == 'totp_required') {
-        return LoginFailure(AuthErrorStatus.totpRequired);
+        return TOTPRequiredError();
       }
 
       // 401 represents either invalid credentials or an invalid TOTP
       if (response.statusCode == 401) {
         if (jsonBody['status'] == 'totp_invalid') {
-          return LoginFailure(AuthErrorStatus.totpInvalid);
+          return TOTPInvalidError();
         }
-        return LoginFailure(AuthErrorStatus.invalidCredentials);
+        return InvalidCredentialsError();
       }
 
       final accessToken = jsonBody['accessToken'];
@@ -73,11 +94,10 @@ class AuthProvider extends ChangeNotifier {
       _isLoggedIn = true;
       notifyListeners();
 
-      return LoginSuccess();
-    } catch (e) {
-      // TODO: improve error handling
-      print(e);
-      return LoginFailure(AuthErrorStatus.error);
+      return AuthenticationSuccess();
+    } on http.ClientException catch (e) {
+      print(e.message);
+      return AuthenticationError(e.message);
     }
   }
 }
