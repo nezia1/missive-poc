@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:poc_flutter_client/features/authentication/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.title});
@@ -23,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             children: [
               SizedBox(
-                height: 100,
+                height: 70,
                 child: DrawerHeader(
                     child: TextButton.icon(
                   label: const Text('Settings'),
@@ -32,7 +34,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     context.push('/settings');
                   },
                 )),
-              )
+              ),
+              SizedBox(
+                height: 70,
+                child: DrawerHeader(
+                    child: TextButton.icon(
+                        label: const Text('Logout'),
+                        icon: const Icon(Icons.logout),
+                        onPressed: () {
+                          Provider.of<AuthProvider>(context, listen: false)
+                              .logout();
+                        })),
+              ),
             ],
           ),
         ));
