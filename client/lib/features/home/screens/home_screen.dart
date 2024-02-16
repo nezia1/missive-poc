@@ -18,12 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final Future<User?> _user = UserProvider().user;
 
   @override
-  void initState() {
-    super.initState();
-    userProvider.user;
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
@@ -73,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
 
                     TextStyle? style =
-                        Theme.of(context).textTheme.headlineMedium;
+                        Theme.of(context).textTheme.headlineLarge;
                     return Text('Welcome, ${user.name}', style: style);
                   }
 

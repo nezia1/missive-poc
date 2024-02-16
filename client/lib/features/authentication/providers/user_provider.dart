@@ -103,7 +103,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   Future<void> loadProfile() async {
-    if (_accessToken == null) {
+    if (await accessToken == null) {
       // TODO handle/log error (this should never happen)
       return;
     }
@@ -111,7 +111,7 @@ class UserProvider extends ChangeNotifier {
     try {
       final response = await http
           .get(Uri.parse('${ApiConstants.baseUrl}/users/me'), headers: {
-        'Authorization': 'Bearer $accessToken',
+        'Authorization': 'Bearer ${await accessToken}',
       });
 
       User user =
