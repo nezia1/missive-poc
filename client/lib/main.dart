@@ -9,20 +9,21 @@ import 'package:poc_flutter_client/features/authentication/login_screen.dart';
 import 'package:poc_flutter_client/features/home/screens/home_screen.dart';
 
 // providers
-import 'package:poc_flutter_client/features/authentication/providers/auth_provider.dart';
+import 'package:poc_flutter_client/features/authentication/providers/user_provider.dart';
 
 void main() => runApp(FlutterPOC());
 
 class FlutterPOC extends StatelessWidget {
   FlutterPOC({super.key});
 
-  final _authProvider = AuthProvider();
-
+  final UserProvider _userProvider = UserProvider();
   static const title = 'Flutter Auth';
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => _authProvider,
+  Widget build(BuildContext context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => _userProvider),
+        ],
         child: MaterialApp.router(
           title: title,
           theme: ThemeData(
@@ -52,15 +53,14 @@ class FlutterPOC extends StatelessWidget {
     redirect: (context, state) {
       final loggingIn = state.matchedLocation == '/login';
 
-      if (!_authProvider.isLoggedIn) return loggingIn ? null : '/login';
+      if (!_userProvider.isLoggedIn) return loggingIn ? null : '/login';
 
       if (loggingIn) {
-        // TODO figure out why it redirects twice, this will do for now
-        if (_router.canPop()) _router.pop();
+        _router.pop();
         return '/';
       }
       return null;
     },
-    refreshListenable: _authProvider,
+    refreshListenable: _userProvider,
   );
 }

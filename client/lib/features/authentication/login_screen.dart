@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:poc_flutter_client/features/authentication/providers/user_provider.dart';
 import 'package:provider/provider.dart';
-import 'providers/auth_provider.dart';
 import 'totp_modal.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final loginResult = await Provider.of<AuthProvider>(context, listen: false)
+    final loginResult = await Provider.of<UserProvider>(context, listen: false)
         .login(_name, _password, _totp);
 
     switch (loginResult) {
@@ -103,20 +103,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           context: context,
                           builder: (BuildContext context) {
                             return TOTPModal(onHandleTotp: (totp) async {
+                              _loggingIn = true;
+                              bool authenticationSucceeded = false;
                               final loginResult =
-                                  await Provider.of<AuthProvider>(context,
+                                  await Provider.of<UserProvider>(context,
                                           listen: false)
                                       .login(_name, _password, totp);
                               switch (loginResult) {
                                 case AuthenticationSuccess():
-                                  return true;
+                                  authenticationSucceeded = true;
                                 case TOTPInvalidError():
-                                  return false;
+                                  authenticationSucceeded = false;
                                 case AuthenticationError():
                                   print(loginResult.message);
-                                  // TODO handle/log AuthStatus.error  (a generic error here is concerning)
-                                  return false;
+                                  authenticationSucceeded = false;
                               }
+                              _loggingIn = false;
+                              return authenticationSucceeded;
                             });
                           });
                     }

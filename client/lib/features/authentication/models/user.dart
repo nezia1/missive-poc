@@ -1,18 +1,16 @@
 class User {
   String id;
-  String username;
+  String name;
   bool? totpEnabled;
 
   User({
     required this.id,
-    required this.username,
+    required this.name,
     this.totpEnabled,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-        id: json['id'],
-        username: json['username'],
-        totpEnabled: json['totp_url']);
+        id: json['id'], name: json['name'], totpEnabled: json['totp_url']);
   }
 }
