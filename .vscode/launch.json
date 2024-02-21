@@ -6,7 +6,6 @@
             "type": "bun",
             "request": "launch",
             "program": "${workspaceFolder}/server/index.ts",
-
         },
         {
             "name": "Launch Client",
