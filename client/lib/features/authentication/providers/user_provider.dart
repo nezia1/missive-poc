@@ -15,6 +15,7 @@ class UserProvider extends ChangeNotifier {
   String? _accessToken;
   bool _isLoggedIn = false;
   User? _user;
+  http.Client _httpClient = http.Client();
 
   /// Returns the access token as [String], or null if it's not available.
   Future<String?> get accessToken async {
@@ -24,7 +25,16 @@ class UserProvider extends ChangeNotifier {
     return prefs.getString('accessToken');
   }
 
+  /// Returns the currently authenticated [User], or null if it's not available.
+  Future<User?> get user async {
+    if (_user == null) await loadProfile();
+    return _user;
+  }
+
   bool get isLoggedIn => _isLoggedIn;
+
+  /// Creates a new [UserProvider] with an optional [httpClient].
+  UserProvider({http.Client? httpClient});
 
   /// Logs in a user and returns a [AuthenticationResult], that can either be [AuthenticationSuccess] or [AuthenticationError].
   Future<AuthenticationResult> login(String name, String password,
@@ -38,7 +48,7 @@ class UserProvider extends ChangeNotifier {
       final requestBody = jsonEncode(
           {'name': name, 'password': password, if (totp != null) 'totp': totp});
 
-      final response = await http.post(
+      final response = await _httpClient.post(
           Uri.parse('${ApiConstants.baseUrl}/tokens'),
           headers: {'Content-Type': 'application/json'},
           body: requestBody);
@@ -97,11 +107,6 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<User?> get user async {
-    if (_user == null) await loadProfile();
-    return _user;
-  }
-
   Future<void> loadProfile() async {
     if (await accessToken == null) {
       // TODO handle/log error (this should never happen)
@@ -109,7 +114,7 @@ class UserProvider extends ChangeNotifier {
     }
 
     try {
-      final response = await http
+      final response = await _httpClient
           .get(Uri.parse('${ApiConstants.baseUrl}/users/me'), headers: {
         'Authorization': 'Bearer ${await accessToken}',
       });
