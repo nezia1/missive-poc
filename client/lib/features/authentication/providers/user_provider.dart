@@ -15,7 +15,7 @@ class UserProvider extends ChangeNotifier {
   String? _accessToken;
   bool _isLoggedIn = false;
   User? _user;
-  http.Client _httpClient = http.Client();
+  final http.Client _httpClient;
 
   /// Returns the access token as [String], or null if it's not available.
   Future<String?> get accessToken async {
@@ -34,7 +34,8 @@ class UserProvider extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
 
   /// Creates a new [UserProvider] with an optional [httpClient].
-  UserProvider({http.Client? httpClient});
+  UserProvider({http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
 
   /// Logs in a user and returns a [AuthenticationResult], that can either be [AuthenticationSuccess] or [AuthenticationError].
   Future<AuthenticationResult> login(String name, String password,
