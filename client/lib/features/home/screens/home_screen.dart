@@ -14,8 +14,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final UserProvider userProvider = UserProvider();
-  final Future<User?> _user = UserProvider().user;
+  late UserProvider _userProvider;
+  @override
+  void initState() {
+    super.initState();
+    _userProvider = Provider.of<UserProvider>(context, listen: false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         label: const Text('Logout'),
                         icon: const Icon(Icons.logout),
                         onPressed: () {
-                          Provider.of<UserProvider>(context, listen: false)
-                              .logout();
+                          _userProvider.logout();
                         })),
               ),
             ],
@@ -58,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const EdgeInsets.symmetric(horizontal: 80.0, vertical: 20.0),
             child: Column(children: [
               FutureBuilder(
-                future: _user,
+                future: _userProvider.user,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final user = snapshot.data;
