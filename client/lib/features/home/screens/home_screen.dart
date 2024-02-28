@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poc_flutter_client/features/authentication/models/user.dart';
 import 'package:provider/provider.dart';
 import 'package:poc_flutter_client/features/authentication/providers/user_provider.dart';
 
