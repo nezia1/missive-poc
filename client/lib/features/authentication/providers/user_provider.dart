@@ -49,10 +49,10 @@ class UserProvider extends ChangeNotifier {
       final requestBody = jsonEncode(
           {'name': name, 'password': password, if (totp != null) 'totp': totp});
 
-      final response = await _httpClient.post(
-          Uri.parse('${ApiConstants.baseUrl}/tokens'),
-          headers: {'Content-Type': 'application/json'},
-          body: requestBody);
+      final response = await _httpClient
+          .post(Uri.parse('${ApiConstants.baseUrl}/tokens'),
+              headers: {'Content-Type': 'application/json'}, body: requestBody)
+          .timeout(const Duration(seconds: 5));
 
       final jsonBody = jsonDecode(response.body);
 
@@ -149,6 +149,10 @@ class AuthenticationError extends AuthenticationResult implements Error {
   final String? message;
 
   AuthenticationError([this.message]);
+}
+
+class AuthenticationTimeoutError extends AuthenticationError {
+  AuthenticationTimeoutError();
 }
 
 class InvalidCredentialsError extends AuthenticationError {

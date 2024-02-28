@@ -15,8 +15,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _name = '';
   String _password = '';
+  String _errorMessage = '';
   String? _totp;
-  String? _errorMessage;
 
   bool _totpRequired = false;
   bool _loggingIn = false;
@@ -33,7 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_name.trim() == '' || _password.trim() == '') {
       setState(() {
         _errorMessage = 'Please fill in all fields';
+        _loggingIn = false;
       });
+
       return;
     }
 
@@ -45,23 +47,24 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _totpRequired = true);
       case InvalidCredentialsError():
         setState(() => _errorMessage = 'Your credentials are invalid');
-      case AuthenticationError():
-        // TODO handle/log error
-        print(loginResult.message);
-        setState(() => _errorMessage = 'An unexpected error occurred');
+      case AuthenticationTimeoutError():
+        setState(() => _errorMessage =
+            'The request timed out (server could not be reached)');
       default:
+        setState(() => _errorMessage = 'An unexpected error occurred');
         break;
     }
 
     setState(() => _loggingIn = false);
-    if (_errorMessage != null && _errorMessage!.isNotEmpty && mounted) {
-      final errorSnackBar = SnackBar(
-          content: Text('Login failed: $_errorMessage'),
-          action: SnackBarAction(
-              label: 'Dismiss',
-              onPressed: ScaffoldMessenger.of(context).hideCurrentSnackBar));
-      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar);
-    }
+  }
+
+  void displayErrorSnackBar(String message) {
+    final errorSnackBar = SnackBar(
+        content: Text('Login failed: $message'),
+        action: SnackBarAction(
+            label: 'Dismiss',
+            onPressed: ScaffoldMessenger.of(context).hideCurrentSnackBar));
+    ScaffoldMessenger.of(context).showSnackBar(errorSnackBar);
   }
 
   @override
@@ -97,6 +100,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text('Login'),
                   onPressed: () async {
                     await handleLogin();
+                    if (_errorMessage.isNotEmpty) {
+                      displayErrorSnackBar(_errorMessage);
+                    }
+
                     if (_totpRequired) {
                       if (!context.mounted) return;
                       showModalBottomSheet(
