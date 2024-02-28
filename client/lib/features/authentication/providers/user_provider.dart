@@ -16,6 +16,7 @@ class UserProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
   User? _user;
   final http.Client _httpClient;
+  final FlutterSecureStorage _secureStorage;
 
   /// Returns the access token as [String], or null if it's not available.
   Future<String?> get accessToken async {
@@ -33,15 +34,14 @@ class UserProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
 
-  /// Creates a new [UserProvider] with an optional [httpClient].
-  UserProvider({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+  /// Creates a new [UserProvider] with an optional [http.Client] and [FlutterSecureStorage].
+  UserProvider({http.Client? httpClient, FlutterSecureStorage? secureStorage})
+      : _httpClient = httpClient ?? http.Client(),
+        _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   /// Logs in a user and returns a [AuthenticationResult], that can either be [AuthenticationSuccess] or [AuthenticationError].
   Future<AuthenticationResult> login(String name, String password,
       [String? totp]) async {
-    // key-value storage for sensitive data
-    const secureStorage = FlutterSecureStorage();
     // regular key-value storage
     final prefs = await SharedPreferences.getInstance();
 
@@ -80,7 +80,7 @@ class UserProvider extends ChangeNotifier {
 
       // store tokens
       _accessToken = accessToken;
-      await secureStorage.write(key: 'refreshToken', value: refreshToken);
+      await _secureStorage.write(key: 'refreshToken', value: refreshToken);
       await prefs.setString('accessToken', accessToken);
 
       _isLoggedIn = true;
@@ -96,10 +96,8 @@ class UserProvider extends ChangeNotifier {
   /// Logs out a user and clears the stored tokens.
   /// TODO delete the refresh token from the server
   void logout() async {
-    const secureStorage = FlutterSecureStorage();
     final prefs = await SharedPreferences.getInstance();
-
-    await secureStorage.delete(key: 'refreshToken');
+    await _secureStorage.delete(key: 'refreshToken');
     await prefs.remove('accessToken');
 
     _user = null;
