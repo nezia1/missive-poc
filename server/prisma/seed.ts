@@ -14,7 +14,7 @@ async function main() {
     secret: generateRandomBase32String(32),
   })
 
-  await prisma.user.create({
+  const alice = await prisma.user.create({
     data: {
       name: 'Alice',
       password: await password.hash('Super'),
@@ -22,7 +22,22 @@ async function main() {
     },
   })
 
-  await prisma.user.create({
+  const bob = await prisma.user.create({
     data: { name: 'Bob', password: await password.hash('Super') },
   })
+
+  console.log({ alice, bob })
 }
+
+await main()
+  .then(async () => {
+    await prisma.$disconnect()
+  })
+
+  .catch(async (e) => {
+    console.error(e)
+
+    await prisma.$disconnect()
+
+    process.exit(1)
+  })
