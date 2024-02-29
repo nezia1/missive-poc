@@ -24,7 +24,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     preParsing: authenticationHook,
     handler: async (request, _) => {
       const user = await prisma.user.findUniqueOrThrow({
-        where: { id: request.authenticatedUser?.id },
+        where: { id: request.authenticatedUser!.id },
       })
 
       return exclude(user, ['password', 'totp_url'])
@@ -63,13 +63,13 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
           algorithm: 'SHA256',
           digits: 6,
           period: 30,
-          secret: totp ? generateRandomBase32String(32) : undefined,
+          secret: generateRandomBase32String(32),
         })
       }
 
       const updatedUser = await prisma.user.update({
         where: {
-          id: request.authenticatedUser?.id,
+          id: request.authenticatedUser!.id,
         },
         data: {
           totp_url:
