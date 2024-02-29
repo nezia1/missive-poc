@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { jwtVerify } from 'jose'
 import { JWTInvalid } from 'jose/errors'
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -15,7 +15,7 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 // This is needed to augment the FastifyRequest type and add the authenticatedUser property
 declare module 'fastify' {
   interface FastifyRequest {
-    authenticatedUser?: Prisma.UserSelect
+    authenticatedUser?: User
   }
 }
 
