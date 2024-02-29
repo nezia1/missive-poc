@@ -6,6 +6,9 @@
     "start": "bun run index.ts",
     "dev": "bun run --watch index.ts"
   },
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "devDependencies": {
     "@types/node": "^20.10.3",
     "bun-types": "latest",
