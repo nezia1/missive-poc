@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import * as OTPAuth from 'otpauth'
 import { password } from 'bun'
 import { generateRandomBase32String } from '@/utils'
+import constants from '@/constants'
 
 const prisma = new PrismaClient()
 
@@ -14,19 +15,21 @@ async function main() {
     secret: generateRandomBase32String(32),
   })
 
-  const alice = await prisma.user.create({
-    data: {
-      name: 'Alice',
-      password: await password.hash('Super'),
-      totp_url: totp.toString(),
-    },
-  })
+  const users = constants.seedUsers
 
-  const bob = await prisma.user.create({
-    data: { name: 'Bob', password: await password.hash('Super') },
-  })
+  for (const user of users) {
+    const { name, password: plainPassword } = user
 
-  console.log({ alice, bob })
+    const hashedPassword = await password.hash(plainPassword)
+    await prisma.user.create({
+      data: {
+        name,
+        password: hashedPassword,
+        totp_url: totp.toString(),
+      },
+    })
+  }
+  console.log(users)
 }
 
 await main()
