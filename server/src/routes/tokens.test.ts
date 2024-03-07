@@ -1,11 +1,21 @@
 import { sampleUsers } from '@/constants'
 import app from '@/app'
 import t from 'tap'
+import { jwtVerify } from 'jose'
 
-t.test('POST /tokens successful authentication', async (t) => {
-  const userWithTOTP = sampleUsers[0]
-  const userWithoutTOTP = sampleUsers[1]
+const userWithTOTP = sampleUsers[0]
+const userWithoutTOTP = sampleUsers[1]
 
+const successfulResponseWithoutTOTP = await app.inject({
+  method: 'POST',
+  url: '/tokens',
+  payload: {
+    name: userWithoutTOTP.name,
+    password: userWithoutTOTP.password,
+  },
+})
+
+t.test('POST /tokens', async (t) => {
   const successfulResponseWithTOTP = await app.inject({
     method: 'POST',
     url: '/tokens',
@@ -14,12 +24,13 @@ t.test('POST /tokens successful authentication', async (t) => {
       password: userWithTOTP.password,
     },
   })
-  const successfulResponseWithoutTOTP = await app.inject({
+
+  const unsuccessfulResponse = await app.inject({
     method: 'POST',
     url: '/tokens',
     payload: {
-      name: userWithoutTOTP.name,
-      password: userWithoutTOTP.password,
+      name: 'nonexistent',
+      password: 'nonexistent',
     },
   })
 
@@ -34,4 +45,33 @@ t.test('POST /tokens successful authentication', async (t) => {
     'totp_required',
     'should respond with status: totp_required field when using TOTP'
   )
+
+  t.equal(
+    unsuccessfulResponse.statusCode,
+    401,
+    'should have a 401 UNAUTHORIZED status code on login using wrong credentials'
+  )
+})
+
+t.test('PUT /tokens', async (t) => {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+  const successfullyRefreshedTokenResponse = await app.inject({
+    method: 'PUT',
+    url: '/tokens',
+    cookies: {
+      refreshToken: successfulResponseWithoutTOTP.cookies[0].value,
+    },
+  })
+
+  const accessToken = successfullyRefreshedTokenResponse.json().accessToken
+
+  let isAccessTokenValid: boolean
+  try {
+    await jwtVerify(accessToken, secret)
+    isAccessTokenValid = true
+  } catch {
+    isAccessTokenValid = false
+  }
+
+  t.equal(isAccessTokenValid, true, 'should respond with a valid access token')
 })
