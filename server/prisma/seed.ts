@@ -23,7 +23,7 @@ async function main() {
       data: {
         name,
         password: hashedPassword,
-        totp_url: totp.toString(),
+        totp_url: user.totp ? totp.toString() : null,
       },
     })
   }
