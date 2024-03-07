@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import * as OTPAuth from 'otpauth'
-import { password } from 'bun'
+import * as argon2 from 'argon2'
 import { generateRandomBase32String } from '@/utils'
-import constants from '@/constants'
+import { sampleUsers } from '@/constants'
 
 const prisma = new PrismaClient()
 
@@ -15,12 +15,10 @@ async function main() {
     secret: generateRandomBase32String(32),
   })
 
-  const users = constants.seedUsers
+  for (const user of sampleUsers) {
+    const { name, password } = user
 
-  for (const user of users) {
-    const { name, password: plainPassword } = user
-
-    const hashedPassword = await password.hash(plainPassword)
+    const hashedPassword = await argon2.hash(password)
     await prisma.user.create({
       data: {
         name,
@@ -29,7 +27,6 @@ async function main() {
       },
     })
   }
-  console.log(users)
 }
 
 await main()

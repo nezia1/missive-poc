@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
-import { password } from 'bun'
+import * as argon2 from 'argon2'
 import { SignJWT, jwtVerify } from 'jose'
 import * as OTPAuth from 'otpauth'
 
@@ -32,9 +32,9 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
     if (user === null)
       throw new AuthenticationError('Invalid username or password')
 
-    const passwordIsCorrect = await password.verify(
-      request.body.password,
-      user.password
+    const passwordIsCorrect = await argon2.verify(
+      user.password,
+      request.body.password
     )
 
     if (!passwordIsCorrect)

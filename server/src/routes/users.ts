@@ -2,7 +2,7 @@ import { FastifyPluginCallback } from 'fastify'
 import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library.js'
 import { jwtVerify } from 'jose'
-import { password } from 'bun'
+import * as argon2 from 'argon2'
 import * as OTPAuth from 'otpauth'
 
 import { generateRandomBase32String, parseGenericError, exclude } from '@/utils'
@@ -37,7 +37,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
       const newUser = await prisma.user.create({
         data: {
           name: request.body.name,
-          password: await password.hash(request.body.password),
+          password: await argon2.hash(request.body.password),
         },
       })
 
