@@ -6,6 +6,8 @@ import * as OTPAuth from 'otpauth'
 
 import { AuthenticationError } from '@/errors'
 import { parseGenericError } from '@/utils'
+import { Permissions } from '@/permissions'
+
 import { JWTInvalid } from 'jose/errors'
 
 if (!process.env.JWT_SECRET) {
@@ -52,7 +54,9 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
         return response.status(401).send({ status: 'totp_invalid' })
     }
     // Creating the first access and refresh tokens
-    const accessToken = await new SignJWT()
+    const accessToken = await new SignJWT({
+      scope: [Permissions.USER_READ, Permissions.USER_WRITE],
+    })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(user.id)
