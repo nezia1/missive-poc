@@ -6,3 +6,10 @@ export class AuthenticationError extends Error {
     this.id = id
   }
 }
+
+export class AuthorizationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this
+  }
+}

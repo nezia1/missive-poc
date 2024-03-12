@@ -8,7 +8,7 @@ import {
   JWTInvalid,
 } from 'jose/errors'
 
-import { AuthenticationError } from './errors'
+import { AuthenticationError, AuthorizationError } from './errors'
 
 interface ParseErrorOptions {
   notFoundMessage: string
@@ -70,6 +70,9 @@ export function parseGenericError(
     apiError.statusCode = 401
     apiError.responseMessage = error.message
     apiError.message = `Authentication failed for user ${error.id}: ${error.message}`
+  } else if (error instanceof AuthorizationError) {
+    apiError.statusCode = 403
+    apiError.responseMessage = error.message
   }
 
   // Generic errors
