@@ -6,8 +6,9 @@ import * as argon2 from 'argon2'
 import * as OTPAuth from 'otpauth'
 
 import { generateRandomBase32String, parseGenericError, exclude } from '@/utils'
-import { authenticationHook } from '@/hooks'
+import { authenticationHook, authorizationHook } from '@/hooks'
 import { AuthenticationError } from '@/errors'
+import { Permissions } from '@/permissions'
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not defined')
@@ -21,7 +22,10 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
   fastify.route({
     method: 'GET',
     url: '/me',
-    preParsing: authenticationHook,
+    preParsing: [
+      authenticationHook,
+      authorizationHook([Permissions.USER_READ]),
+    ],
     handler: async (request, _) => {
       const user = await prisma.user.findUniqueOrThrow({
         where: { id: request.authenticatedUser!.id },
