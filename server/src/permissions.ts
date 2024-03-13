@@ -1,4 +1,4 @@
 export enum Permissions {
-  USER_READ = 'user:read',
-  USER_WRITE = 'user:write',
+  PROFILE_READ = 'profile:read',
+  PROFILE_WRITE = 'profile:write',
 }

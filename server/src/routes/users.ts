@@ -24,7 +24,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
     url: '/me',
     preParsing: [
       authenticationHook,
-      authorizationHook([Permissions.USER_READ]),
+      authorizationHook([Permissions.PROFILE_READ]),
     ],
     handler: async (request, _) => {
       const user = await prisma.user.findUniqueOrThrow({
