@@ -9,6 +9,7 @@ import { parseGenericError } from '@/utils'
 import { Permissions } from '@/permissions'
 
 import { JWTInvalid } from 'jose/errors'
+import { SignScopedJWT } from '@/jwt'
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not defined')
@@ -54,7 +55,7 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
         return response.status(401).send({ status: 'totp_invalid' })
     }
     // Creating the first access and refresh tokens
-    const accessToken = await new SignJWT({
+    const accessToken = await new SignScopedJWT({
       scope: [Permissions.PROFILE_READ, Permissions.PROFILE_WRITE],
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -100,7 +101,7 @@ const tokens: FastifyPluginCallback = (fastify, _, done) => {
       where: { id: payload.sub },
     })
 
-    const accessToken = await new SignJWT({
+    const accessToken = await new SignScopedJWT({
       scope: [Permissions.PROFILE_READ, Permissions.PROFILE_WRITE],
     })
       .setProtectedHeader({ alg: 'HS256' })

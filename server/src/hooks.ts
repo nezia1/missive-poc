@@ -2,7 +2,9 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { jwtVerify } from 'jose'
 import { JWTInvalid } from 'jose/errors'
 import { PrismaClient, User } from '@prisma/client'
+
 import { AuthenticationError, AuthorizationError } from './errors'
+import { verifyAndDecodeJWT } from './jwt'
 
 const prisma = new PrismaClient()
 
@@ -30,7 +32,8 @@ export async function authenticationHook(
   if (!accessToken) throw new JWTInvalid('Missing access token')
 
   // Get access token payload and check if it matches a user (jwtVerify throws an error if the token is invalid for any reason)
-  const { payload } = await jwtVerify(accessToken, secret)
+  const payload = await verifyAndDecodeJWT(accessToken, secret)
+
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: payload.sub },
   })
@@ -42,8 +45,7 @@ export async function authenticationHook(
       'Token used does not have any permissions (likely a refresh token)'
     )
 
-  // TODO: this is bad (we should ideally extend Jose's SignJWT type or make a subclass) but i don't have time to fix it
-  request.authenticatedUser.permissions = payload.scope as string[]
+  request.authenticatedUser.permissions = payload.scope
 }
 
 // This needs to be curried to be able to pass the permissionsRequired array (Fastify hooks are functions with a specific signature, with request and reply, so we can't pass the permissionsRequired array directly)
