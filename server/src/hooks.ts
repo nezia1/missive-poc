@@ -61,7 +61,7 @@ export function authorizationHook(permissionsRequired: string[]) {
       )
     ) {
       throw new AuthorizationError(
-        "You don't have the required permissions to access this resource"
+        `You don't have the required permissions to access this resource (need ${permissionsRequired.join()})`
       )
     }
   }
