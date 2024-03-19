@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "@biomejs/biome": "^1.6.1",
+    "lefthook": "^1.6.7"
+  }
+}
