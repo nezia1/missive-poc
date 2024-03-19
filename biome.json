@@ -9,7 +9,16 @@
 			"recommended": true
 		}
 	},
-	"formatter": {
-		"enabled": true
+	"javascript": {
+		"formatter": {
+			"arrowParentheses": "always",
+			"quoteStyle": "single",
+			"semicolons": "asNeeded",
+			"trailingComma": "all",
+			"quoteProperties": "asNeeded",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"enabled": true
+		}
 	}
 }
