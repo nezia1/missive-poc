@@ -10,7 +10,7 @@ import { authenticationHook, authorizationHook } from '@/hooks'
 import { Permissions } from '@/permissions'
 import { exclude, generateRandomBase32String, parseGenericError } from '@/utils'
 
-import type { APIReply, ErrorResponse } from '@/globals'
+import type { APIReply } from '@/globals'
 if (!process.env.JWT_SECRET) {
 	console.error('JWT_SECRET is not defined')
 	process.exit(1)
