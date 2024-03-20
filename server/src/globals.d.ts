@@ -1,19 +1,20 @@
 import { StringAsNumber } from 'fastify/types/utils'
 
-interface SuccessResponse {
-	data: Record<string, unknown>
-	errors?: never
+// TODO add more status for both interfaces
+export interface APIReply {
+	'2xx': {
+		data: {
+			status?: 'totp_required'
+			[key: string]: unknown
+		}
+	}
+	204: { [key: string]: never }
+	'4xx': ErrorResponse
 }
 
-interface ErrorResponse {
-	data?: never
-	error: APIError
+export interface ErrorResponse {
+	error: {
+		status?: 'totp_invalid'
+		[key: string]: unknown
+	}
 }
-
-export interface APIError {
-	responseMessage: string
-	message: string
-	statusCode: number
-}
-
-export type APIResponse = SuccessResponse | ErrorResponse

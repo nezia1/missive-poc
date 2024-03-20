@@ -10,6 +10,7 @@ import { authenticationHook, authorizationHook } from '@/hooks'
 import { Permissions } from '@/permissions'
 import { exclude, generateRandomBase32String, parseGenericError } from '@/utils'
 
+import type { APIReply, ErrorResponse } from '@/globals'
 if (!process.env.JWT_SECRET) {
 	console.error('JWT_SECRET is not defined')
 	process.exit(1)
@@ -19,25 +20,25 @@ const prisma = new PrismaClient()
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const users: FastifyPluginCallback = (fastify, _, done) => {
-	fastify.route({
+	fastify.route<{ Reply: APIReply }>({
 		method: 'GET',
 		url: '/me',
 		preParsing: [
 			authenticationHook,
 			authorizationHook([Permissions.PROFILE_READ]),
 		],
-		handler: async (request, _) => {
+		handler: async (request, reply) => {
 			const user = await prisma.user.findUniqueOrThrow({
 				where: { id: request.authenticatedUser?.id },
 			})
 
-			return exclude(user, ['password', 'totp_url'])
+			reply.status(200).send({ data: exclude(user, ['password', 'totp_url']) })
 		},
 	})
 
-	fastify.post<{ Body: Prisma.UserCreateInput }>(
+	fastify.post<{ Body: Prisma.UserCreateInput; Reply: APIReply }>(
 		'/',
-		async (request, response) => {
+		async (request, reply) => {
 			const newUser = await prisma.user.create({
 				data: {
 					name: request.body.name,
@@ -45,17 +46,18 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
 				},
 			})
 
-			response.statusCode = 201
-
-			return { id: newUser.id }
+			reply.status(201).send({ data: { id: newUser.id } })
 		},
 	)
 
-	fastify.route<{ Body: Prisma.UserUpdateInput & { enable_totp?: boolean } }>({
+	fastify.route<{
+		Body: Prisma.UserUpdateInput & { enable_totp?: boolean }
+		Reply: APIReply
+	}>({
 		method: 'PATCH',
 		url: '/me',
 		preParsing: authenticationHook,
-		handler: async (request, response) => {
+		handler: async (request, reply) => {
 			let totp: OTPAuth.TOTP | undefined
 
 			// If the user wants to enable TOTP, we generate a new URL
@@ -88,15 +90,14 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
 				})
 
 			if (totp) {
-				response.send({ totp: totp.toString() })
-				response.statusCode = 200
+				reply.status(200).send({ data: { totp: totp.toString() } })
 				return
 			}
-			response.statusCode = 204
+			reply.status(204).send()
 		},
 	})
 
-	fastify.route({
+	fastify.route<{ Reply: APIReply }>({
 		method: 'DELETE',
 		url: '/me',
 		preParsing: authenticationHook,
@@ -109,7 +110,7 @@ const users: FastifyPluginCallback = (fastify, _, done) => {
 				},
 			})
 
-			response.statusCode = 204
+			response.status(204).send()
 		},
 	})
 

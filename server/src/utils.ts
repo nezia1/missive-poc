@@ -8,7 +8,6 @@ import {
 	JWTInvalid,
 } from 'jose/errors'
 
-import type { APIError } from '@/globals'
 import { AuthenticationError, AuthorizationError } from './errors'
 
 interface ParseErrorOptions {
@@ -16,6 +15,11 @@ interface ParseErrorOptions {
 	duplicateMessage: string
 }
 
+interface APIError {
+	statusCode: number
+	responseMessage: string
+	message: string
+}
 /**
  * Transforms a generic Typescript error into an APIError.
  * @param {Error} error - The error to parse.
