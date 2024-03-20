@@ -2,12 +2,9 @@ import cookie from '@fastify/cookie'
 import type { FastifyCookieOptions } from '@fastify/cookie'
 import { PrismaClient } from '@prisma/client'
 import Fastify from 'fastify'
-import * as OTPAuth from 'otpauth'
 
 import tokens from '@/routes/tokens'
 import users from '@/routes/users'
-
-const prisma = new PrismaClient()
 
 const fastify = Fastify({ logger: true })
 
