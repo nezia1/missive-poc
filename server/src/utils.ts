@@ -8,17 +8,12 @@ import {
 	JWTInvalid,
 } from 'jose/errors'
 
+import type { APIError } from '@/globals'
 import { AuthenticationError, AuthorizationError } from './errors'
 
 interface ParseErrorOptions {
 	notFoundMessage: string
 	duplicateMessage: string
-}
-
-interface APIError {
-	responseMessage: string
-	message: string
-	statusCode: number
 }
 
 /**
