@@ -35,7 +35,9 @@ class _TOTPModalState extends State<TOTPModal> {
 
                 setState(() => _totpInvalid = totpInvalid);
 
-                if (mounted && !_totpInvalid) {
+                if (!context.mounted) return;
+
+                if (!_totpInvalid) {
                   Navigator.pop(context);
                 }
               }),
