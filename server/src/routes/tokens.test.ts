@@ -41,7 +41,7 @@ t.test('POST /tokens', async (t) => {
 	)
 
 	t.equal(
-		successfulResponseWithTOTP.json().status,
+		successfulResponseWithTOTP.json().data.status,
 		'totp_required',
 		'should respond with status: totp_required field when using TOTP',
 	)
@@ -63,7 +63,7 @@ t.test('PUT /tokens', async (t) => {
 		},
 	})
 
-	const accessToken = successfullyRefreshedTokenResponse.json().accessToken
+	const accessToken = successfullyRefreshedTokenResponse.json().data.accessToken
 
 	let isAccessTokenValid: boolean
 	try {
