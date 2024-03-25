@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx --watch index.ts",
-		"test": "tap"
+		"test": "tap --allow-empty-coverage"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
