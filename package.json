@@ -4,7 +4,7 @@
 		"lefthook": "^1.6.7"
 	},
 	"scripts": {
-		"prepare": "prepare.sh",
+		"prepare": "./prepare.sh",
 		"test": "npm run test --prefix server"
 	}
 }
