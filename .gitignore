@@ -176,3 +176,6 @@ dist
 
 # tap output
 .tap
+
+# Python virtual environment
+venv
