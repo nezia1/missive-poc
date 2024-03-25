@@ -4,6 +4,6 @@
 		"lefthook": "^1.6.7"
 	},
 	"scripts": {
-		"prepare": "lefthook install"
+		"prepare": "lefthook install && ./is_submodule.sh && ln biome.json ../biome.json"
 	}
 }
