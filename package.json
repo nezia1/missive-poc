@@ -4,6 +4,7 @@
 		"lefthook": "^1.6.7"
 	},
 	"scripts": {
-		"prepare": "lefthook install && ./is_submodule.sh && ln biome.json ../biome.json"
+		"prepare": "lefthook install && ./is_submodule.sh && ln -f biome.json ../biome.json",
+		"test": "npm run test --prefix server"
 	}
 }
