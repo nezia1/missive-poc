@@ -10,7 +10,8 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final user = json['data'];
     return User(
-        id: json['id'], name: json['name'], totpEnabled: json['totp_url']);
+        id: user['id'], name: user['name'], totpEnabled: user['totp_url']);
   }
 }

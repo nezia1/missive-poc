@@ -57,7 +57,8 @@ class UserProvider extends ChangeNotifier {
       final jsonBody = jsonDecode(response.body);
 
       // 200 represents a successful login attempt, but the user needs to provide a TOTP
-      if (response.statusCode == 200 && jsonBody['status'] == 'totp_required') {
+      if (response.statusCode == 200 &&
+          jsonBody['data']['status'] == 'totp_required') {
         return TOTPRequiredError();
       }
 
@@ -69,7 +70,7 @@ class UserProvider extends ChangeNotifier {
         return InvalidCredentialsError();
       }
 
-      final accessToken = jsonBody['accessToken'];
+      final accessToken = jsonBody['data']['accessToken'];
 
       // the set-cookie header is not accessible from the http package, so we have to parse it manually
       final refreshToken = response.headers['set-cookie']
