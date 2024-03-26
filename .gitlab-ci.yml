@@ -11,5 +11,12 @@ unit_tests:
   script:
     - npm install
     - cd server && npm install
+    - npx prisma migrate dev
     - npm test
-    
+  services:
+    - postgres:latest
+  variables:
+    POSTGRES_PASSWORD: Super
+    DATABASE_URL: postgresql://postgres:Super@postgres:5432/poc-flutter?schema=public
+    JWT_SECRET: secret
+    COOKIE_SECRET: secret
