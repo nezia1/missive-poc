@@ -1,7 +1,8 @@
+import assert from 'node:assert'
+import { describe, it } from 'node:test'
 import app from '@/app'
 import { sampleUsers } from '@/constants'
 import { jwtVerify } from 'jose'
-import t from 'tap'
 
 const userWithTOTP = sampleUsers[0]
 const userWithoutTOTP = sampleUsers[1]
@@ -15,7 +16,7 @@ const successfulResponseWithoutTOTP = await app.inject({
 	},
 })
 
-t.test('POST /tokens', async (t) => {
+describe('POST /tokens', async () => {
 	const successfulResponseWithTOTP = await app.inject({
 		method: 'POST',
 		url: '/tokens',
@@ -34,27 +35,26 @@ t.test('POST /tokens', async (t) => {
 		},
 	})
 
-	t.equal(
-		successfulResponseWithoutTOTP.statusCode,
-		201,
-		'should have a 201 CREATED status code on successful login',
-	)
+	it('should have a 201 CREATED status code on successful login', () => {
+		assert.strictEqual(successfulResponseWithoutTOTP.statusCode, 201)
+	})
 
-	t.equal(
-		successfulResponseWithTOTP.json().data.status,
-		'totp_required',
-		'should respond with status: totp_required field when using TOTP',
-	)
+	it('should respond with status: totp_required field when using TOTP', () => {
+		assert.strictEqual(
+			successfulResponseWithTOTP.json().data.status,
+			'totp_required',
+			'should respond with status: totp_required field when using TOTP',
+		)
+	})
 
-	t.equal(
-		unsuccessfulResponse.statusCode,
-		401,
-		'should have a 401 UNAUTHORIZED status code on login using wrong credentials',
-	)
+	it('should have a 401 UNAUTHORIZED status code on login using wrong credentials', () => {
+		assert.strictEqual(unsuccessfulResponse.statusCode, 401)
+	})
 })
 
-t.test('PUT /tokens', async (t) => {
+describe('PUT /tokens', async () => {
 	const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+
 	const successfullyRefreshedTokenResponse = await app.inject({
 		method: 'PUT',
 		url: '/tokens',
@@ -73,5 +73,7 @@ t.test('PUT /tokens', async (t) => {
 		isAccessTokenValid = false
 	}
 
-	t.equal(isAccessTokenValid, true, 'should respond with a valid access token')
+	it('should respond with a valid access token', () => {
+		assert.strictEqual(isAccessTokenValid, true)
+	})
 })
