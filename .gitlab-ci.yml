@@ -1,0 +1,15 @@
+# .gitlab-ci.yml
+
+# Define the stages of the pipeline
+stages:
+  - test
+
+# Define the job for running unit tests
+unit_tests:
+  stage: test
+  image: node:latest
+  script:
+    - npm install
+    - cd server && npm install
+    - npm test
+    
